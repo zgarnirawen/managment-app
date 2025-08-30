@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: #c8c8c8;
+  }
+  
+  body {
+    background-color: #081729;
+    color: #FFFFFF;
+  }
+  
+  .bg-background {
+    background-color: #081729 !important;
+  }
+  
+  .text-foreground {
+    color: #FFFFFF !important;
+  }
+  
+  .border-border {
+    border-color: #c8c8c8 !important;
+  }
+  
+  /* Ensure white backgrounds have dark text for accessibility */
+  .bg-white {
+    color: #111827; /* gray-900 */
+  }
+  
+  .bg-white * {
+    color: inherit;
+  }
+  
+  /* Override for explicit white text on white backgrounds */
+  .bg-white .text-white {
+    color: #ffffff !important;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

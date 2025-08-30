@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .icon {
+            width: 80px;
+            height: 80px;
+            background: #00ff88;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #00ff88;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+        
+        .role-group {
+            margin-bottom: 30px;
+        }
+        
+        .role-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .role-button {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .role-button:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            transform: translateY(-2px);
+        }
+        
+        .role-button.selected {
+            background: rgba(0, 255, 136, 0.3);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        
+        .continue-btn {
+            width: 100%;
+            padding: 18px;
+            background: #00ff88;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .continue-btn:hover {
+            background: #00dd77;
+            transform: translateY(-2px);
+        }
+        
+        .continue-btn:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .benefits {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+        }
+        
+        .benefits h4 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        
+        .benefits p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚡</div>
+        <h1>Instant Setup</h1>
+        <p class="subtitle">No waiting - get started immediately!</p>
+        
+        <div class="role-group">
+            <h3 class="role-title">Choose Your Role:</h3>
+            <button class="role-button" onclick="selectRole('Employee')" id="employee">
+                Employee
+            </button>
+            <button class="role-button" onclick="selectRole('Manager')" id="manager">
+                Manager
+            </button>
+            <button class="role-button" onclick="selectRole('Admin')" id="admin">
+                Admin
+            </button>
+        </div>
+        
+        <button class="continue-btn" onclick="continueSetup()" id="continueBtn" disabled>
+            Select a role to continue →
+        </button>
+        
+        <div class="benefits">
+            <h4>✓ Zero Loading Time</h4>
+            <p>Skip all authentication delays and access your dashboard instantly!</p>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = '';
+        
+        function selectRole(role) {
+            selectedRole = role;
+            
+            // Remove selected class from all buttons
+            document.querySelectorAll('.role-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked button
+            document.getElementById(role.toLowerCase()).classList.add('selected');
+            
+            // Enable continue button
+            const continueBtn = document.getElementById('continueBtn');
+            continueBtn.disabled = false;
+            continueBtn.textContent = `Continue as ${role} →`;
+        }
+        
+        function continueSetup() {
+            if (!selectedRole) return;
+            
+            // Store role in localStorage
+            localStorage.setItem('userRole', selectedRole);
+            
+            // Show success message
+            document.querySelector('.container').innerHTML = `
+                <div class="icon">✅</div>
+                <h1>Setup Complete!</h1>
+                <p class="subtitle">Redirecting to your dashboard...</p>
+                <div style="margin-top: 20px; padding: 20px; background: rgba(0, 255, 136, 0.2); border-radius: 12px;">
+                    <h4 style="color: #00ff88;">Role Selected: ${selectedRole}</h4>
+                    <p style="margin-top: 10px;">You can now access all features instantly!</p>
+                </div>
+            `;
+            
+            // Redirect after a short delay
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

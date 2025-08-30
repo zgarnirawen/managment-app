@@ -1,0 +1,648 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  description   String?
+  headId        String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  announcements Announcement[]
+  chatChannels  ChatChannel[]
+  employees     Employee[]
+  projects      Project[]
+  resources     Resource[]
+}
+
+model Employee {
+  id                           String                 @id @default(cuid())
+  name                         String
+  email                        String                 @unique
+  clerkUserId                  String?                @unique @map("clerk_user_id")
+  role                         String                 @default("Employee") // Keep for backwards compatibility
+  roleId                       String?                // Make optional for gradual migration
+  position                     String?
+  phone                        String?
+  address                      String?
+  hireDate                     DateTime?
+  emergencyContactName         String?
+  emergencyContactPhone        String?
+  emergencyContactRelationship String?
+  departmentId                 String?
+  managerId                    String?
+  notificationPreferences      String?
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt
+  calendarSyncSettings    CalendarSyncSettings[]
+  createdChannels         ChatChannel[]          @relation("ChannelCreator")
+  channelMemberships      ChatChannelMember[]    @relation("ChannelMemberships")
+  channelMessages         ChatChannelMessage[]   @relation("ChannelMessageSender")
+  sentChatMessages        ChatMessage[]
+  messageReactions        ChatMessageReaction[]
+  comments                Comment[]              @relation("CommentAuthor")
+  receivedDirectMessages  DirectMessage[]        @relation("ReceivedDirectMessages")
+  sentDirectMessages      DirectMessage[]        @relation("SentDirectMessages")
+  department              Department?            @relation(fields: [departmentId], references: [id])
+  roleModel               Role?                  @relation(fields: [roleId], references: [id])
+  manager                 Employee?              @relation("ManagerEmployee", fields: [managerId], references: [id])
+  subordinates            Employee[]             @relation("ManagerEmployee")
+  internProfile           InternProfile?
+  mentorInterns           InternProfile[]        @relation("MentorInterns")
+  assignedInternTasks     InternTask[]           @relation("InternTaskAssigner")
+  internTasks             InternTask[]           @relation("InternTaskAssignee")
+  leaveRequests           LeaveRequest[]
+  organizedMeetings       Meeting[]              @relation("MeetingOrganizer")
+  notifications           Notification[]
+  uploadedResources       Resource[]
+  tasks                   Task[]                 @relation("EmployeeTasks")
+  timeEntries             TimeEntry[]
+  weeklySummaries         WeeklySummary[]
+  mentions                Comment[]              @relation("CommentMentions")
+  projects                Project[]              @relation("EmployeeProjects")
+  attendingMeetings       Meeting[]              @relation("MeetingAttendees")
+  createdPolicies         Policy[]               @relation("PolicyCreator")
+  approvedPolicies        Policy[]               @relation("PolicyApprover")
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  deadline    DateTime?
+  employeeId  String?
+  projectId   String?
+  sprintId    String?
+  attachments String[]     @default([])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  comments    Comment[]    @relation("TaskComments")
+  subtasks    SubTask[]
+  assignedTo  Employee?    @relation("EmployeeTasks", fields: [employeeId], references: [id])
+  project     Project?     @relation(fields: [projectId], references: [id])
+  sprint      Sprint?      @relation("SprintTasks", fields: [sprintId], references: [id])
+}
+
+model SubTask {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  taskId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Sprint {
+  id        String   @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]   @relation("SprintTasks")
+}
+
+model Meeting {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  type        MeetingType @default(GENERAL)
+  organizerId String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  organizer   Employee    @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  attendees   Employee[]  @relation("MeetingAttendees")
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  departmentId String?
+  startDate    DateTime      @default(now())
+  endDate      DateTime?
+  status       ProjectStatus @default(PLANNED)
+  attachments  String[]      @default([])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  comments     Comment[]     @relation("ProjectComments")
+  department   Department?   @relation(fields: [departmentId], references: [id])
+  tasks        Task[]
+  employees    Employee[]    @relation("EmployeeProjects")
+}
+
+model LeaveRequest {
+  id              String      @id @default(cuid())
+  type            LeaveType   @default(VACATION)
+  startDate       DateTime
+  endDate         DateTime
+  reason          String?
+  status          LeaveStatus @default(PENDING)
+  employeeId      String
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  employee        Employee    @relation(fields: [employeeId], references: [id])
+}
+
+model TimeEntry {
+  id         String        @id @default(cuid())
+  employeeId String
+  type       TimeEntryType
+  startTime  DateTime      @default(now())
+  endTime    DateTime?
+  duration   Int?
+  location   String?
+  isOnline   Boolean       @default(true)
+  approved   Boolean       @default(false)
+  approvedBy String?
+  notes      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  employee   Employee      @relation(fields: [employeeId], references: [id])
+}
+
+model Role {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  employees Employee[] @relation()
+}
+
+model WeeklySummary {
+  id            String   @id @default(cuid())
+  employeeId    String
+  weekStart     DateTime
+  weekEnd       DateTime
+  totalHours    Float
+  overtimeHours Float    @default(0)
+  regularHours  Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  employee      Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, weekStart])
+}
+
+model Comment {
+  id        String     @id @default(cuid())
+  content   String
+  taskId    String?
+  projectId String?
+  authorId  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  author    Employee   @relation("CommentAuthor", fields: [authorId], references: [id])
+  project   Project?   @relation("ProjectComments", fields: [projectId], references: [id], onDelete: Cascade)
+  task      Task?      @relation("TaskComments", fields: [taskId], references: [id], onDelete: Cascade)
+  mentions  Employee[] @relation("CommentMentions")
+
+  @@index([taskId])
+  @@index([projectId])
+  @@index([authorId])
+}
+
+model CalendarSyncSettings {
+  id                String                @id @default(cuid())
+  employeeId        String
+  provider          CalendarProvider
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  syncEnabled       Boolean               @default(true)
+  syncDirection     CalendarSyncDirection @default(BIDIRECTIONAL)
+  syncEvents        CalendarSyncEvents    @default(ALL)
+  lastSyncAt        DateTime?
+  isActive          Boolean               @default(true)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  syncLogs          CalendarSyncLog[]
+  employee          Employee              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, provider])
+  @@index([employeeId])
+}
+
+model CalendarSyncLog {
+  id              String                @id @default(cuid())
+  settingsId      String
+  operation       CalendarSyncOperation
+  status          CalendarSyncStatus
+  eventId         String?
+  externalEventId String?
+  errorMessage    String?
+  metadata        Json?
+  createdAt       DateTime              @default(now())
+  settings        CalendarSyncSettings  @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+
+  @@index([settingsId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  employeeId String
+  message    String
+  type       NotificationType
+  read       Boolean          @default(false)
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  employee   Employee         @relation(fields: [employeeId], references: [id])
+}
+
+model InternProfile {
+  id          String    @id @default(cuid())
+  employeeId  String    @unique
+  mentorId    String?
+  startDate   DateTime
+  endDate     DateTime?
+  university  String?
+  major       String?
+  yearOfStudy Int?
+  skills      String[]  @default([])
+  goals       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  mentor      Employee? @relation("MentorInterns", fields: [mentorId], references: [id])
+}
+
+model Announcement {
+  id           String             @id @default(cuid())
+  title        String
+  content      String
+  target       AnnouncementTarget @default(ALL)
+  departmentId String?
+  priority     Priority           @default(MEDIUM)
+  expiresAt    DateTime?
+  createdBy    String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  department   Department?        @relation(fields: [departmentId], references: [id])
+}
+
+model InternTask {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  status      InternTaskStatus @default(ASSIGNED)
+  priority    Priority         @default(MEDIUM)
+  deadline    DateTime?
+  internId    String
+  assignedBy  String
+  category    String?
+  tags        String[]         @default([])
+  attachments String[]         @default([])
+  feedback    String?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  assigner    Employee         @relation("InternTaskAssigner", fields: [assignedBy], references: [id])
+  intern      Employee         @relation("InternTaskAssignee", fields: [internId], references: [id], onDelete: Cascade)
+}
+
+model Resource {
+  id            String       @id @default(cuid())
+  title         String
+  description   String?
+  type          ResourceType
+  url           String
+  fileSize      Int?
+  mimeType      String?
+  thumbnailUrl  String?
+  departmentId  String?
+  uploadedBy    String
+  tags          String[]     @default([])
+  isPublic      Boolean      @default(true)
+  downloadCount Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  department    Department?  @relation(fields: [departmentId], references: [id])
+  uploader      Employee     @relation(fields: [uploadedBy], references: [id])
+}
+
+model ChatMessage {
+  id          String        @id @default(cuid())
+  content     String
+  senderId    String
+  channelId   String
+  channelType ChannelType   @default(INTERN_GENERAL)
+  replyToId   String?
+  attachments String[]      @default([])
+  isEdited    Boolean       @default(false)
+  editedAt    DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  replyTo     ChatMessage?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     ChatMessage[] @relation("MessageReplies")
+  sender      Employee      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model ChatChannel {
+  id           String               @id @default(cuid())
+  name         String
+  description  String?
+  type         ChatChannelType      @default(GENERAL)
+  isPrivate    Boolean              @default(false)
+  departmentId String?
+  createdBy    String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  creator      Employee             @relation("ChannelCreator", fields: [createdBy], references: [id])
+  department   Department?          @relation(fields: [departmentId], references: [id])
+  members      ChatChannelMember[]
+  messages     ChatChannelMessage[]
+}
+
+model ChatChannelMember {
+  id         String         @id @default(cuid())
+  channelId  String
+  employeeId String
+  role       ChatMemberRole @default(MEMBER)
+  joinedAt   DateTime       @default(now())
+  lastReadAt DateTime?
+  channel    ChatChannel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  employee   Employee       @relation("ChannelMemberships", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, employeeId])
+}
+
+model ChatChannelMessage {
+  id          String                @id @default(cuid())
+  content     String
+  channelId   String
+  senderId    String
+  replyToId   String?
+  messageType ChatMessageType       @default(TEXT)
+  attachments String[]              @default([])
+  isEdited    Boolean               @default(false)
+  editedAt    DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  channel     ChatChannel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  replyTo     ChatChannelMessage?   @relation("ChannelMessageReplies", fields: [replyToId], references: [id])
+  replies     ChatChannelMessage[]  @relation("ChannelMessageReplies")
+  sender      Employee              @relation("ChannelMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  reactions   ChatMessageReaction[]
+}
+
+model DirectMessage {
+  id          String                @id @default(cuid())
+  content     String
+  senderId    String
+  receiverId  String
+  replyToId   String?
+  messageType ChatMessageType       @default(TEXT)
+  attachments String[]              @default([])
+  isEdited    Boolean               @default(false)
+  editedAt    DateTime?
+  isRead      Boolean               @default(false)
+  readAt      DateTime?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  reactions   ChatMessageReaction[]
+  receiver    Employee              @relation("ReceivedDirectMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  replyTo     DirectMessage?        @relation("DirectMessageReplies", fields: [replyToId], references: [id])
+  replies     DirectMessage[]       @relation("DirectMessageReplies")
+  sender      Employee              @relation("SentDirectMessages", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessageReaction {
+  id               String              @id @default(cuid())
+  emoji            String
+  employeeId       String
+  channelMessageId String?
+  directMessageId  String?
+  createdAt        DateTime            @default(now())
+  channelMessage   ChatChannelMessage? @relation(fields: [channelMessageId], references: [id], onDelete: Cascade)
+  directMessage    DirectMessage?      @relation(fields: [directMessageId], references: [id], onDelete: Cascade)
+  employee         Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([emoji, employeeId, channelMessageId])
+  @@unique([emoji, employeeId, directMessageId])
+}
+
+enum MeetingType {
+  GENERAL
+  ONE_ON_ONE
+  TEAM
+  ALL_HANDS
+  TRAINING
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+}
+
+enum TimeEntryType {
+  CLOCK_IN
+  CLOCK_OUT
+  BREAK_START
+  BREAK_END
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveType {
+  VACATION
+  SICK
+  PERSONAL
+  MATERNITY
+  EMERGENCY
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATE
+  DEADLINE_REMINDER
+  TASK_COMPLETED
+  MEETING_REMINDER
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  COMMENT_MENTION
+  COMMENT_ADDED
+  FILE_UPLOADED
+  CALENDAR_SYNC_SUCCESS
+  CALENDAR_SYNC_ERROR
+  ANNOUNCEMENT
+  INTERN_UPDATE
+}
+
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+  APPLE
+  CALDAV
+  EXCHANGE
+}
+
+enum CalendarSyncDirection {
+  IMPORT_ONLY
+  EXPORT_ONLY
+  BIDIRECTIONAL
+}
+
+enum CalendarSyncEvents {
+  ALL
+  MEETINGS_ONLY
+  TASKS_ONLY
+  CUSTOM
+}
+
+enum CalendarSyncOperation {
+  CREATE
+  UPDATE
+  DELETE
+  IMPORT
+  EXPORT
+}
+
+enum CalendarSyncStatus {
+  SUCCESS
+  ERROR
+  PARTIAL
+  SKIPPED
+}
+
+enum AnnouncementTarget {
+  ALL
+  INTERNS
+  EMPLOYEES
+  DEPARTMENT
+  MANAGERS
+}
+
+enum InternTaskStatus {
+  ASSIGNED
+  IN_PROGRESS
+  UNDER_REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum ResourceType {
+  PDF
+  DOC
+  LINK
+  VIDEO
+  IMAGE
+  SPREADSHEET
+  PRESENTATION
+  ARCHIVE
+  OTHER
+}
+
+enum ChannelType {
+  INTERN_GENERAL
+  INTERN_DEPARTMENT
+  INTERN_PROJECT
+  INTERN_MENTOR
+  INTERN_HELP
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ChatChannelType {
+  GENERAL
+  TEAM
+  DEPARTMENT
+  PROJECT
+  INTERN
+  ANNOUNCEMENT
+}
+
+enum ChatMemberRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  userName   String
+  userRole   String
+  action     String
+  resource   String
+  resourceId String?
+  details    String
+  severity   String   @default("low") // low, medium, high, critical
+  ipAddress  String
+  userAgent  String
+  timestamp  DateTime @default(now())
+  
+  @@index([timestamp])
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+}
+
+model Policy {
+  id                 String    @id @default(cuid())
+  title              String
+  category           String
+  description        String
+  content            String
+  version            String    @default("1.0")
+  status             String    @default("draft") // draft, active, archived
+  tags               String[]  @default([])
+  effectiveDate      DateTime
+  expiryDate         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  createdById        String
+  approvedById       String?
+  
+  createdByEmployee  Employee  @relation("PolicyCreator", fields: [createdById], references: [id])
+  approvedByEmployee Employee? @relation("PolicyApprover", fields: [approvedById], references: [id])
+  
+  @@index([category])
+  @@index([status])
+  @@index([effectiveDate])
+}

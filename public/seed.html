@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seed Tasks</title>
+</head>
+<body>
+    <h1>Seed Tasks</h1>
+    <button onclick="seedTasks()">Create Sample Tasks</button>
+    <div id="result"></div>
+
+    <script>
+        async function seedTasks() {
+            try {
+                const response = await fetch('/api/seed-tasks', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
