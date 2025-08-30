@@ -14,6 +14,7 @@ export default function SetupPage() {
   });
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   // Auto-populate user data from Clerk when available
   useEffect(() => {
@@ -47,38 +48,49 @@ export default function SetupPage() {
 
     try {
       setIsSubmitting(true);
+      setProgress(10);
       setMessage('Configuration en cours...');
 
-      // Try to save to Clerk metadata if possible
+      // Always save to localStorage first (immediate backup)
+      setProgress(30);
+      localStorage.setItem('userRole', formData.role);
+      localStorage.setItem('userName', finalName);
+      localStorage.setItem('userEmail', finalEmail);
+      localStorage.setItem('setupComplete', 'true');
+
+      // Try to save to Clerk metadata (secondary)
+      setProgress(50);
+      let clerkSuccess = false;
       try {
+        setMessage('Sauvegarde en cours...');
         const response = await fetch('/api/setup-role', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ role: formData.role })
         });
 
+        setProgress(80);
         if (response.ok) {
-          console.log('✅ Role saved to Clerk metadata');
+          const result = await response.json();
+          console.log('✅ Role saved to Clerk metadata', result);
+          clerkSuccess = true;
+          setMessage('✅ Configuration sauvegardée avec succès! Redirection...');
         } else {
           console.log('⚠️ Clerk metadata save failed, using localStorage fallback');
+          setMessage('⚠️ Configuration terminée (mode local)! Redirection...');
         }
       } catch (error) {
         console.log('⚠️ Clerk API unavailable, using localStorage');
+        setMessage('Configuration terminée (mode local)! Redirection...');
       }
 
-      // Always save to localStorage as backup
-      localStorage.setItem('userRole', formData.role);
-      localStorage.setItem('userName', finalName);
-      localStorage.setItem('userEmail', finalEmail);
-      localStorage.setItem('setupComplete', 'true');
-
-      setMessage('Configuration terminée! Redirection vers le tableau de bord...');
-      
-      // Use router for navigation (more reliable than window.location)
+      setProgress(100);
+      // Immediate redirection (no long delay)
       setTimeout(() => {
         const dashboardPath = getDashboardPath(formData.role);
+        console.log(`🚀 Redirecting to: ${dashboardPath}`);
         router.push(dashboardPath);
-      }, 1500);
+      }, 800); // Reduced from 1500ms to 800ms
 
     } catch (error) {
       console.error('Setup error:', error);
@@ -199,13 +211,24 @@ export default function SetupPage() {
 
           {message && (
             <div className={`text-center text-sm p-3 rounded ${
-              message.includes('terminée') || message.includes('Configuration terminée')
+              message.includes('terminée') || message.includes('Configuration terminée') || message.includes('sauvegardée')
                 ? 'text-green-600 bg-green-50' 
                 : message.includes('Erreur')
                 ? 'text-red-600 bg-red-50'
                 : 'text-blue-600 bg-blue-50'
             }`}>
               {message}
+              {isSubmitting && (
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                      style={{width: `${progress}%`}}
+                    ></div>
+                  </div>
+                  <div className="text-xs mt-1">{progress}%</div>
+                </div>
+              )}
             </div>
           )}
         </form>
