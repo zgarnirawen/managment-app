@@ -84,9 +84,9 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Handle authenticated users with role-based access control
   if (userId && sessionClaims) {
-    const unsafeMetadata = sessionClaims.unsafeMetadata as any;
-    const userRole = unsafeMetadata?.role as string;
-    const roleSetupComplete = unsafeMetadata?.roleSetupComplete as boolean;
+    const publicMetadata = sessionClaims.publicMetadata as any;
+    const userRole = publicMetadata?.role as string;
+    const roleSetupComplete = publicMetadata?.roleSetupComplete as boolean;
 
     // Re-enable role setup requirement
     if (!userRole || !roleSetupComplete) {
