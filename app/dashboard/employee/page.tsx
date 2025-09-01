@@ -7,18 +7,14 @@ import LeaveRequestForm from './LeaveRequestForm';
 import PerformanceSummary from './PerformanceSummary';
 import EmployeeTimeTracking from './EmployeeTimeTracking';
 import EmployeeTimesheet from './EmployeeTimesheet';
-// import RoleGuard from '../../components/RoleGuard';
+import RoleGuard from '../../components/RoleGuard';
 
 export default function EmployeeDashboard() {
-  // Temporarily disable role guard for testing
-  return <EmployeeDashboardContent />;
-  
-  // Uncomment this when Clerk authentication is properly set up:
-  // return (
-  //   <RoleGuard allowedRoles={['employee']}>
-  //     <EmployeeDashboardContent />
-  //   </RoleGuard>
-  // );
+  return (
+    <RoleGuard allowedRoles={['EMPLOYEE', 'MANAGER', 'ADMIN', 'SUPER_ADMIN']}>
+      <EmployeeDashboardContent />
+    </RoleGuard>
+  );
 }
 
 function EmployeeDashboardContent() {

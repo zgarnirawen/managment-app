@@ -4,18 +4,14 @@ import { useState } from 'react';
 import ManagerTimeApproval from './ManagerTimeApproval';
 import ManagerTimesheets from './ManagerTimesheets';
 import LeaveManagement from '../../components/LeaveManagement';
-// import RoleGuard from '../../components/RoleGuard';
+import RoleGuard from '../../components/RoleGuard';
 
 export default function ManagerDashboard() {
-  // Temporarily disable role guard for testing
-  return <ManagerDashboardContent />;
-  
-  // Uncomment this when Clerk authentication is properly set up:
-  // return (
-  //   <RoleGuard allowedRoles={['manager']}>
-  //     <ManagerDashboardContent />
-  //   </RoleGuard>
-  // );
+  return (
+    <RoleGuard allowedRoles={['MANAGER', 'ADMIN', 'SUPER_ADMIN']}>
+      <ManagerDashboardContent />
+    </RoleGuard>
+  );
 }
 
 function ManagerDashboardContent() {

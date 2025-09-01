@@ -25,7 +25,7 @@ export default function AutoRoleRedirect() {
           router.push('/dashboard/employee')
           break
         case 'INTERN':
-          router.push('/dashboard/intern')
+          router.push('/intern-portal')
           break
         default:
           router.push('/dashboard')

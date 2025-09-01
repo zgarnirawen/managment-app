@@ -33,7 +33,7 @@ export default function RoleGuard({
         return;
       }
 
-      const userRole = user.unsafeMetadata?.role as string;
+      const userRole = user.publicMetadata?.role as string;
       console.log('🔐 RoleGuard Check:', {
         currentPath: window.location.pathname,
         userRole: userRole || 'No role assigned',
