@@ -69,6 +69,7 @@ model Employee {
   attendingMeetings       Meeting[]              @relation("MeetingAttendees")
   createdPolicies         Policy[]               @relation("PolicyCreator")
   approvedPolicies        Policy[]               @relation("PolicyApprover")
+  userSettings            UserSettings?
 }
 
 model Task {
@@ -129,20 +130,43 @@ model Meeting {
 }
 
 model Project {
-  id           String        @id @default(cuid())
+  id           String           @id @default(cuid())
   name         String
   description  String?
   departmentId String?
-  startDate    DateTime      @default(now())
+  startDate    DateTime         @default(now())
   endDate      DateTime?
-  status       ProjectStatus @default(PLANNED)
-  attachments  String[]      @default([])
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  comments     Comment[]     @relation("ProjectComments")
-  department   Department?   @relation(fields: [departmentId], references: [id])
+  status       ProjectStatus    @default(PLANNED)
+  attachments  String[]         @default([])
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  comments     Comment[]        @relation("ProjectComments")
+  department   Department?      @relation(fields: [departmentId], references: [id])
   tasks        Task[]
-  employees    Employee[]    @relation("EmployeeProjects")
+  employees    Employee[]       @relation("EmployeeProjects")
+  members      ProjectMember[]
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      String   @default("MEMBER") // OWNER, MANAGER, MEMBER
+  joinedAt  DateTime @default(now())
+  
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, userId])
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("MEMBER") // LEADER, MEMBER
+  joinedAt DateTime @default(now())
+  
+  @@unique([teamId, userId])
 }
 
 model LeaveRequest {
@@ -275,6 +299,7 @@ model InternProfile {
   yearOfStudy Int?
   skills      String[]  @default([])
   goals       String?
+  status      String    @default("ACTIVE") // ACTIVE, COMPLETED, PROMOTED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
@@ -500,6 +525,9 @@ enum NotificationType {
   CALENDAR_SYNC_ERROR
   ANNOUNCEMENT
   INTERN_UPDATE
+  PROMOTION
+  SYSTEM
+  PROJECT_ASSIGNMENT
 }
 
 enum CalendarProvider {
@@ -645,4 +673,32 @@ model Policy {
   @@index([category])
   @@index([status])
   @@index([effectiveDate])
+}
+
+model UserSettings {
+  id                    String    @id @default(cuid())
+  employeeId            String    @unique
+  bio                   String?
+  theme                 String    @default("system")
+  language              String    @default("en")
+  timezone              String    @default("UTC")
+  dateFormat            String    @default("MM/DD/YYYY")
+  timeFormat            String    @default("12h")
+  weekStartsOn          Int       @default(0) // 0 = Sunday, 1 = Monday
+  emailNotifications    Boolean   @default(true)
+  pushNotifications     Boolean   @default(true)
+  smsNotifications      Boolean   @default(false)
+  weeklyReports         Boolean   @default(true)
+  taskReminders         Boolean   @default(true)
+  fontSize              String    @default("medium")
+  sidebarCollapsed      Boolean   @default(false)
+  profileVisible        Boolean   @default(true)
+  allowDirectMessages   Boolean   @default(true)
+  shareActivityStatus   Boolean   @default(true)
+  autoSave              Boolean   @default(true)
+  reducedMotion         Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  employee              Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 }
