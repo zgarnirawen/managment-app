@@ -1,47 +1,16 @@
-/** @type {import('next').NextConfig} */
+// Quick production optimization
 const nextConfig = {
   experimental: {
-    optimizePackageImports: ['@heroicons/react']
+    optimizePackageImports: ['@clerk/nextjs', '@tanstack/react-query']
   },
-  // Add this to silence the workspace root warning
-  outputFileTracingRoot: __dirname,
-  
-  // Allow cross-origin development access
-  allowedDevOrigins: [
-    'localhost:3000',
-    '127.0.0.1:3000',
-    '192.168.100.9:3000'
-  ],
-  
-  // Optimize chunk loading and reduce timeouts
-  webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      // Optimize chunk loading in development
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: {
-              minChunks: 1,
-              priority: -20,
-              reuseExistingChunk: true
-            },
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              priority: -10,
-              reuseExistingChunk: true
-            }
-          }
-        }
-      };
-    }
-    return config;
+  images: {
+    domains: ['images.clerk.dev', 'res.cloudinary.com'],
   },
-  
-  // Optimize server and client
+  // Optimize for production
   compress: true,
-  poweredByHeader: false
+  poweredByHeader: false,
+  // Set output file tracing root to silence workspace warning
+  outputFileTracingRoot: __dirname,
 }
 
 module.exports = nextConfig

@@ -63,7 +63,8 @@ export default function Navigation() {
       // 👤 Employee+ items (Employees, Managers, and Admins - not Interns)
       { href: '/dashboard/tasks', label: '📝 Tasks', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
       { href: '/dashboard/projects', label: '📁 Projects', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
-      { href: '/dashboard/calendar', label: '📅 Calendar', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
+      { href: '/calendar', label: '📅 Calendar', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
+      { href: '/dashboard/video-meetings', label: '📹 Video Meetings', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-purple-300 hover:text-purple-200' },
       { href: '/timesheets', label: '⏰ Timesheets', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-orange-300 hover:text-orange-200' },
       { href: '/gamification', label: '🏆 Achievements', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-yellow-300 hover:text-yellow-200' },
       
@@ -72,6 +73,7 @@ export default function Navigation() {
       
       // 🌍 Shared items (All authenticated users)
       { href: '/dashboard/chat', label: '💬 Chat', show: !!isSignedIn && mounted, className: 'text-nextgen-teal hover:text-cyan-300' },
+      { href: '/email', label: '📧 Email', show: !!isSignedIn && mounted, className: 'text-blue-300 hover:text-blue-200' },
       { href: '/dashboard/notifications', label: '🔔 Notifications', show: !!isSignedIn && mounted, className: 'text-nextgen-teal hover:text-cyan-300' },
       { href: '/profile', label: '👤 Profile', show: !!isSignedIn && mounted, className: 'text-gray-300 hover:text-white' },
       { href: '/settings', label: '⚙️ Settings', show: !!isSignedIn && mounted, className: 'text-nextgen-light-gray hover:text-white' }

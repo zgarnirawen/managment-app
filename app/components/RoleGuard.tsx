@@ -33,17 +33,24 @@ export default function RoleGuard({
         return;
       }
 
-      const userRole = user.publicMetadata?.role as string;
+      // Get user role from multiple sources
+      const userRole = (user.unsafeMetadata?.role as string) || 
+                       (user.publicMetadata?.role as string) || 
+                       localStorage.getItem('userRole');
+                       
       console.log('🔐 RoleGuard Check:', {
         currentPath: window.location.pathname,
         userRole: userRole || 'No role assigned',
         allowedRoles,
-        userId: user.id
+        userId: user.id,
+        unsafeMetadata: user.unsafeMetadata,
+        publicMetadata: user.publicMetadata
       });
 
-      // Check if user has any of the allowed roles
-      const hasPermission = allowedRoles.includes(userRole) || 
-                           (allowedRoles.includes('any') && userRole);
+      // Check if user has any of the allowed roles (case-insensitive)
+      const hasPermission = userRole && allowedRoles.some(role => 
+        role.toUpperCase() === userRole.toUpperCase()
+      ) || (allowedRoles.includes('any') && userRole);
 
       if (hasPermission) {
         console.log('✅ Access granted');
@@ -96,7 +103,7 @@ export default function RoleGuard({
   }
 
   if (!hasAccess) {
-    const userRole = user?.publicMetadata?.role as string;
+    const userRoleForDisplay = user?.unsafeMetadata?.role as string || user?.publicMetadata?.role as string;
     
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -104,9 +111,9 @@ export default function RoleGuard({
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-4">
-            {!userRole 
+            {!userRoleForDisplay 
               ? "You don't have a role assigned yet. Contact your administrator to assign you a role."
-              : `You need ${allowedRoles.join(' or ')} role to access this page. Your current role is: ${userRole}`
+              : `You need ${allowedRoles.join(' or ')} role to access this page. Your current role is: ${userRoleForDisplay}`
             }
           </p>
           <div className="space-y-2">
@@ -116,7 +123,7 @@ export default function RoleGuard({
             >
               Go to Dashboard
             </button>
-            {!userRole && (
+            {!userRoleForDisplay && (
               <button
                 onClick={() => router.push('/dashboard')}
                 className="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"

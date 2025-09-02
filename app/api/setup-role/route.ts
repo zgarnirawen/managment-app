@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     console.log('🔥 Role received:', role);
 
     // Validate role
-    if (!role || !['employee', 'manager', 'admin', 'intern'].includes(role)) {
+    if (!role || !['employee', 'manager', 'admin', 'intern', 'super_admin'].includes(role)) {
       console.log('🔥 Invalid role');
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
 
 function getDashboardPath(role: string): string {
   switch (role) {
+    case 'super_admin': return '/dashboard/admin';
     case 'admin': return '/dashboard/admin';
     case 'manager': return '/dashboard/manager';
     case 'employee': return '/dashboard/employee';

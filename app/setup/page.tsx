@@ -5,92 +5,121 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
 export default function SetupPage() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   const router = useRouter();
   const [formData, setFormData] = useState({
-    role: '',
     name: '',
-    email: ''
+    email: '',
+    role: ''
   });
-  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFirstUser, setIsFirstUser] = useState(false);
+  const [checkingFirstUser, setCheckingFirstUser] = useState(true);
+  const [message, setMessage] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Auto-populate user data from Clerk when available
+  // Check if first user and set form data
   useEffect(() => {
-    if (isLoaded && user) {
-      const userName = user.firstName && user.lastName 
-        ? `${user.firstName} ${user.lastName}`
-        : user.firstName || user.lastName || '';
-      
-      const userEmail = user.primaryEmailAddress?.emailAddress || '';
+    const checkFirstUser = async () => {
+      if (!user) return;
 
-      setFormData(prev => ({
-        ...prev,
-        name: userName,
-        email: userEmail
-      }));
-    }
-  }, [isLoaded, user]);
+      try {
+        const response = await fetch('/api/employees/count');
+        const data = await response.json();
+        const count = data.count || 0;
+        
+        if (count === 0) {
+          setIsFirstUser(true);
+          setFormData({
+            name: user.fullName || '',
+            email: user.primaryEmailAddress?.emailAddress || '',
+            role: 'super_admin'
+          });
+        } else {
+          setFormData({
+            name: user.fullName || '',
+            email: user.primaryEmailAddress?.emailAddress || '',
+            role: 'employee'
+          });
+        }
+      } catch (error) {
+        console.error('Error checking first user:', error);
+        setFormData({
+          name: user.fullName || '',
+          email: user.primaryEmailAddress?.emailAddress || '',
+          role: 'employee'
+        });
+      } finally {
+        setCheckingFirstUser(false);
+      }
+    };
+
+    checkFirstUser();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.role) {
-      setMessage('Veuillez sélectionner un rôle');
-      return;
-    }
+    if (!formData.role) return;
 
-    // Name defaults to Clerk name if not provided
-    const finalName = formData.name || 'Utilisateur';
-    // Email defaults to Clerk email if not provided  
-    const finalEmail = formData.email || user?.primaryEmailAddress?.emailAddress || '';
+    setIsSubmitting(true);
+    setProgress(10);
+    setMessage('Configuration en cours...');
 
     try {
-      setIsSubmitting(true);
-      setProgress(10);
-      setMessage('Configuration en cours...');
-
-      // Always save to localStorage first (immediate backup)
+      const roleToAssign = isFirstUser ? 'super_admin' : formData.role;
+      
       setProgress(30);
-      localStorage.setItem('userRole', formData.role);
-      localStorage.setItem('userName', finalName);
-      localStorage.setItem('userEmail', finalEmail);
-      localStorage.setItem('setupComplete', 'true');
-
-      // Try to save to Clerk metadata (secondary)
-      setProgress(50);
-      let clerkSuccess = false;
+      
+      // Use API endpoint to update user metadata reliably
       try {
-        setMessage('Sauvegarde en cours...');
-        const response = await fetch('/api/setup-role', {
+        console.log('🔄 Updating user metadata via API:', { roleToAssign, name: formData.name });
+        
+        const response = await fetch('/api/setup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: formData.role })
+          body: JSON.stringify({
+            role: roleToAssign,
+            name: formData.name
+          })
         });
 
-        setProgress(80);
-        if (response.ok) {
-          const result = await response.json();
-          console.log('✅ Role saved to Clerk metadata', result);
-          clerkSuccess = true;
-          setMessage('✅ Configuration sauvegardée avec succès! Redirection...');
-        } else {
-          console.log('⚠️ Clerk metadata save failed, using localStorage fallback');
-          setMessage('⚠️ Configuration terminée (mode local)! Redirection...');
+        if (!response.ok) {
+          throw new Error('Failed to update user metadata');
         }
-      } catch (error) {
-        console.log('⚠️ Clerk API unavailable, using localStorage');
-        setMessage('Configuration terminée (mode local)! Redirection...');
-      }
 
-      setProgress(100);
-      // Immediate redirection (no long delay)
-      setTimeout(() => {
-        const dashboardPath = getDashboardPath(formData.role);
-        console.log(`🚀 Redirecting to: ${dashboardPath}`);
-        router.push(dashboardPath);
-      }, 800); // Reduced from 1500ms to 800ms
+        const result = await response.json();
+        console.log('✅ Setup API response:', result);
+        
+        setProgress(80);
+        setMessage('Configuration terminée! Redirection...');
+        
+        // Redirect to the path returned by the API
+        setTimeout(() => {
+          console.log('🚀 Redirecting to:', result.redirectPath);
+          window.location.replace(result.redirectPath);
+        }, 1000);
+        
+      } catch (error) {
+        console.log('⚠️ API setup failed, trying client-side update:', error);
+        
+        // Fallback to client-side update
+        await user?.update({
+          unsafeMetadata: {
+            role: roleToAssign,
+            name: formData.name,
+            roleSetupComplete: true
+          }
+        });
+        
+        setProgress(60);
+        setMessage('Configuration terminée! Redirection...');
+        
+        setTimeout(() => {
+          const dashboardPath = getDashboardPath(roleToAssign);
+          console.log('🚀 Fallback redirect to:', dashboardPath);
+          window.location.replace(dashboardPath);
+        }, 1500);
+      }
 
     } catch (error) {
       console.error('Setup error:', error);
@@ -101,36 +130,60 @@ export default function SetupPage() {
 
   const getDashboardPath = (role: string) => {
     switch (role) {
-      case 'admin': return '/dashboard/admin';
-      case 'manager': return '/dashboard/manager';
-      case 'employee': return '/dashboard/employee';
-      case 'intern': return '/intern-portal';
-      default: return '/dashboard';
+      case 'super_admin':
+      case 'admin':
+        return '/dashboard/admin';
+      case 'manager':
+        return '/dashboard/manager';
+      case 'intern':
+      case 'employee':
+      default:
+        return '/dashboard/employee';
     }
   };
 
-  if (!isLoaded) {
+  const handleManualRedirect = async () => {
+    // Force a reload to refresh the session
+    await user?.reload();
+    
+    const dashboardPath = getDashboardPath(formData.role);
+    
+    // Force redirect using multiple methods
+    window.location.replace(dashboardPath);
+    
+    // Fallback
+    setTimeout(() => {
+      window.location.href = dashboardPath;
+    }, 500);
+  };
+
+  if (checkingFirstUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-pulse text-lg">Chargement...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-900">Chargement...</h2>
+            <p className="text-gray-600 mt-2">Vérification du statut utilisateur</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow text-gray-900">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-900">Configuration initiale</h1>
-        
-        {/* Show user info if available */}
-        {user && (
-          <div className="mb-4 p-3 bg-blue-50 rounded-md">
-            <p className="text-sm text-blue-800">
-              Connecté en tant que: <span className="font-medium">{user.primaryEmailAddress?.emailAddress}</span>
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl font-bold">📋</span>
           </div>
-        )}
-        
+          <h1 className="text-2xl font-bold text-gray-900">Configuration initiale</h1>
+          <p className="text-gray-600 mt-2">
+            Connecté en tant que: <span className="font-medium">{user?.primaryEmailAddress?.emailAddress}</span>
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
@@ -141,7 +194,8 @@ export default function SetupPage() {
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               className="w-full p-2 border rounded-md text-gray-900 bg-white"
-              placeholder="Votre nom"
+              placeholder="Votre nom complet"
+              required
             />
             <p className="text-xs text-gray-500 mt-1">
               {formData.name ? 'Vous pouvez modifier ce nom si nécessaire' : 'Entrez votre nom complet'}
@@ -163,38 +217,40 @@ export default function SetupPage() {
             <p className="text-xs text-gray-500 mt-1">
               {user?.primaryEmailAddress?.emailAddress 
                 ? 'Email de votre compte Clerk (non modifiable)' 
-                : 'Entrez votre adresse email'
-              }
+                : 'Entrez votre adresse email'}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-1 text-gray-700">
               Rôle <span className="text-red-500">*</span>
             </label>
-            <div className="space-y-2">
-              {[
-                { value: 'admin', label: 'Administrateur', desc: 'Accès complet au système' },
-                { value: 'manager', label: 'Manager', desc: 'Gestion des équipes et projets' },
-                { value: 'employee', label: 'Employé', desc: 'Suivi du temps et des tâches' },
-                { value: 'intern', label: 'Stagiaire', desc: 'Accès limité aux fonctionnalités' }
-              ].map((role) => (
-                <label key={role.value} className="flex items-start text-gray-700 p-2 border rounded hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="role"
-                    value={role.value}
-                    checked={formData.role === role.value}
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    className="mr-3 mt-1"
-                  />
-                  <div>
-                    <div className="font-medium">{role.label}</div>
-                    <div className="text-sm text-gray-500">{role.desc}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
+            {isFirstUser ? (
+              <div className="w-full p-3 border rounded-md bg-green-50 border-green-200">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600 font-medium">🏆 Premier utilisateur - Super Administrateur</span>
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  Vous obtenez automatiquement tous les privilèges administrateur
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  className="w-full p-2 border rounded-md text-gray-900 bg-white"
+                  required
+                >
+                  <option value="">Choisir un rôle</option>
+                  <option value="intern">Stagiaire - Accès aux tâches de formation</option>
+                  <option value="employee">Employé - Accès standard</option>
+                </select>
+                <p className="text-xs text-gray-500">
+                  Choisissez votre rôle dans l'organisation
+                </p>
+              </div>
+            )}
           </div>
 
           <button
@@ -211,13 +267,24 @@ export default function SetupPage() {
 
           {message && (
             <div className={`text-center text-sm p-3 rounded ${
-              message.includes('terminée') || message.includes('Configuration terminée') || message.includes('sauvegardée')
+              message.includes('terminée') || message.includes('Configuration terminée')
                 ? 'text-green-600 bg-green-50' 
                 : message.includes('Erreur')
                 ? 'text-red-600 bg-red-50'
                 : 'text-blue-600 bg-blue-50'
             }`}>
               {message}
+              {(message.includes('terminée') || message.includes('Configuration terminée')) && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleManualRedirect}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Aller au Dashboard →
+                  </button>
+                </div>
+              )}
               {isSubmitting && (
                 <div className="mt-2">
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -232,26 +299,6 @@ export default function SetupPage() {
             </div>
           )}
         </form>
-
-        {/* Quick access links - only show if not submitting */}
-        {!isSubmitting && (
-          <div className="mt-6 pt-4 border-t text-center space-y-2">
-            <div className="text-sm text-gray-500">
-              Liens de navigation rapide:
-            </div>
-            <div className="flex justify-center space-x-4">
-              <a href="/dashboard" className="text-blue-600 hover:underline text-sm">
-                Tableau de bord
-              </a>
-              <button 
-                onClick={() => router.push('/dashboard')}
-                className="text-green-600 hover:underline text-sm"
-              >
-                Continuer →
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

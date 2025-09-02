@@ -1,48 +1,48 @@
 import Link from 'next/link';
 import { 
-  ChevronRightIcon, 
-  UsersIcon, 
-  ClockIcon, 
-  ChartBarIcon, 
-  BriefcaseIcon, 
-  CalendarIcon, 
-  AcademicCapIcon 
-} from '@heroicons/react/24/outline';
+  ChevronRight, 
+  Users, 
+  Clock, 
+  BarChart3, 
+  Briefcase, 
+  Calendar, 
+  GraduationCap 
+} from 'lucide-react';
 
 export default function Home() {
   const features = [
     {
       name: 'Employee Management',
       description: 'Streamline your workforce with comprehensive employee profiles and role management.',
-      icon: UsersIcon,
+      icon: Users,
       href: '/dashboard/employees',
       color: 'bg-blue-500',
     },
     {
       name: 'Time Tracking',
       description: 'Track work hours, manage timesheets, and monitor productivity with ease.',
-      icon: ClockIcon,
+      icon: Clock,
       href: '/dashboard/time-tracking',
       color: 'bg-green-500',
     },
     {
       name: 'Project Management',
       description: 'Organize projects, assign tasks, and collaborate effectively with your team.',
-      icon: BriefcaseIcon,
+      icon: Briefcase,
       href: '/dashboard/projects',
       color: 'bg-purple-500',
     },
     {
       name: 'Analytics & Reports',
       description: 'Get insights into productivity, performance, and business metrics.',
-      icon: ChartBarIcon,
+      icon: BarChart3,
       href: '/dashboard/analytics',
       color: 'bg-orange-500',
     },
     {
       name: 'Intern Portal',
       description: 'Dedicated space for interns with mentoring, tasks, and learning resources.',
-      icon: AcademicCapIcon,
+      icon: GraduationCap,
       href: '/intern-portal',
       color: 'bg-emerald-500',
     },
@@ -70,7 +70,7 @@ export default function Home() {
                   className="inline-flex items-center justify-center rounded-nextgen bg-nextgen-teal px-8 py-3 text-base font-medium text-nextgen-dark-gray shadow-nextgen hover:bg-nextgen-teal-hover focus:outline-none focus:ring-2 focus:ring-nextgen-teal focus:ring-offset-2 focus:ring-offset-nextgen-dark-blue transition-all duration-200 transform hover:scale-105"
                 >
                   Get Started
-                  <ChevronRightIcon className="ml-2 h-5 w-5" />
+                  <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
                 <Link
                   href="/dashboard/employees"
@@ -91,29 +91,29 @@ export default function Home() {
                       <div className="grid flex-shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
                         <div className="h-64 w-44 overflow-hidden rounded-nextgen bg-gradient-to-br from-nextgen-teal to-nextgen-light-blue p-6 shadow-nextgen-lg transform rotate-3">
                           <div className="h-full w-full bg-nextgen-white/20 rounded-nextgen backdrop-blur-sm flex items-center justify-center">
-                            <UsersIcon className="h-16 w-16 text-white" />
+                            <Users className="h-16 w-16 text-white" />
                           </div>
                         </div>
                         <div className="h-64 w-44 overflow-hidden rounded-nextgen bg-gradient-to-br from-nextgen-success to-nextgen-teal p-6 shadow-nextgen-lg transform -rotate-2">
                           <div className="h-full w-full bg-nextgen-white/20 rounded-nextgen backdrop-blur-sm flex items-center justify-center">
-                            <ClockIcon className="h-16 w-16 text-nextgen-white" />
+                            <Clock className="h-16 w-16 text-nextgen-white" />
                           </div>
                         </div>
                       </div>
                       <div className="grid flex-shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
                         <div className="h-64 w-44 overflow-hidden rounded-nextgen bg-gradient-to-br from-nextgen-warning to-nextgen-error p-6 shadow-nextgen-lg transform rotate-1">
                           <div className="h-full w-full bg-nextgen-white/20 rounded-nextgen backdrop-blur-sm flex items-center justify-center">
-                            <ChartBarIcon className="h-16 w-16 text-nextgen-white" />
+                            <BarChart3 className="h-16 w-16 text-nextgen-white" />
                           </div>
                         </div>
                         <div className="h-64 w-44 overflow-hidden rounded-nextgen bg-gradient-to-br from-nextgen-light-blue to-nextgen-teal p-6 shadow-nextgen-lg transform -rotate-1">
                           <div className="h-full w-full bg-nextgen-white/20 rounded-nextgen backdrop-blur-sm flex items-center justify-center">
-                            <BriefcaseIcon className="h-16 w-16 text-nextgen-white" />
+                            <Briefcase className="h-16 w-16 text-nextgen-white" />
                           </div>
                         </div>
                         <div className="h-64 w-44 overflow-hidden rounded-nextgen bg-gradient-to-br from-nextgen-teal to-nextgen-light-blue p-6 shadow-nextgen-lg transform rotate-2">
                           <div className="h-full w-full bg-nextgen-white/20 rounded-nextgen backdrop-blur-sm flex items-center justify-center">
-                            <CalendarIcon className="h-16 w-16 text-nextgen-white" />
+                            <Calendar className="h-16 w-16 text-nextgen-white" />
                           </div>
                         </div>
                       </div>
@@ -155,7 +155,7 @@ export default function Home() {
                 </p>
                 <div className="mt-4 flex items-center text-nextgen-teal group-hover:text-nextgen-teal-hover">
                   <span className="text-sm font-medium">Learn more</span>
-                  <ChevronRightIcon className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                  <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
                 </div>
               </Link>
             ))}
@@ -207,7 +207,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center rounded-nextgen bg-nextgen-teal px-8 py-3 text-base font-medium text-nextgen-dark-gray shadow-nextgen hover:bg-nextgen-teal-hover focus:outline-none focus:ring-2 focus:ring-nextgen-teal focus:ring-offset-2 focus:ring-offset-nextgen-dark-blue transition-all duration-200 transform hover:scale-105"
               >
                 Start Free Trial
-                <ChevronRightIcon className="ml-2 h-5 w-5" />
+                <ChevronRight className="ml-2 h-5 w-5" />
               </Link>
             </div>
           </div>
