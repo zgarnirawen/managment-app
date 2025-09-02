@@ -28,7 +28,7 @@ export default function DashboardPage() {
     employee: '/employee', 
     manager: '/manager',
     admin: '/admin',
-    super_admin: '/super-admin'
+    super_admin: '/dashboard/super-admin'
   };
 
   useEffect(() => {

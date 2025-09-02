@@ -139,12 +139,12 @@ export default function RoleBasedNavigation() {
       id: 'super-admin',
       label: 'Super Admin',
       icon: Crown,
-      href: '/super-admin',
+      href: '/dashboard/super-admin',
       roles: ['super_admin'],
       submenu: [
-        { id: 'admin-management', label: 'Admin Management', icon: Shield, href: '/super-admin/admins', roles: ['super_admin'] },
-        { id: 'succession', label: 'Succession Planning', icon: Crown, href: '/super-admin/succession', roles: ['super_admin'] },
-        { id: 'system-override', label: 'System Override', icon: Database, href: '/super-admin/override', roles: ['super_admin'] }
+        { id: 'admin-management', label: 'Admin Management', icon: Shield, href: '/dashboard/super-admin', roles: ['super_admin'] },
+        { id: 'succession', label: 'Succession Planning', icon: Crown, href: '/dashboard/super-admin', roles: ['super_admin'] },
+        { id: 'system-override', label: 'System Override', icon: Database, href: '/dashboard/super-admin', roles: ['super_admin'] }
       ]
     }
   ];
