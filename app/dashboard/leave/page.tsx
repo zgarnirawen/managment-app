@@ -152,7 +152,7 @@ export default function LeaveDashboard() {
     setShowDetailsDialog(true)
   }
 
-  const handleSubmitRequest = () => {
+  const handleSubmitRequest = async () => {
     if (!formData.startDate || !formData.endDate || !formData.reason) {
       alert('Please fill in all required fields')
       return
@@ -177,8 +177,18 @@ export default function LeaveDashboard() {
       emergencyContact: formData.emergencyContact
     }
 
-    console.log('New leave request:', newRequest)
-    setShowRequestDialog(false)
+    try {
+      await fetch('/api/placeholder/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'leave', data: newRequest })
+      })
+      setShowRequestDialog(false)
+      alert('Leave request submitted (placeholder)')
+    } catch (err) {
+      console.error('New leave request failed (placeholder)', err)
+      alert('Failed to submit leave request (placeholder)')
+    }
     setFormData({
       leaveType: 'vacation',
       startDate: undefined,
@@ -186,7 +196,7 @@ export default function LeaveDashboard() {
       reason: '',
       emergencyContact: ''
     })
-    alert('Leave request submitted successfully!')
+  // handled above
   }
 
   const handleApproveReject = (action: 'approve' | 'reject', requestId: number) => {

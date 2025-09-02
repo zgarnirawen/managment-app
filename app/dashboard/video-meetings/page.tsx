@@ -160,7 +160,7 @@ export default function VideoMeetingsDashboard() {
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
     .slice(0, 3)
 
-  const handleCreateMeeting = () => {
+  const handleCreateMeeting = async () => {
     if (!formData.title || !formData.date || !formData.startTime || !formData.endTime) {
       alert('Please fill in all required fields')
       return
@@ -184,8 +184,19 @@ export default function VideoMeetingsDashboard() {
       maxParticipants: formData.maxParticipants
     }
 
-    console.log('New meeting created:', newMeeting)
-    setShowCreateDialog(false)
+    // POST to placeholder create API
+    try {
+      await fetch('/api/placeholder/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'meeting', data: newMeeting })
+      })
+      setShowCreateDialog(false)
+      alert('Meeting created (placeholder)')
+    } catch (err) {
+      console.error('Failed to create meeting (placeholder)', err)
+      alert('Failed to create meeting (placeholder)')
+    }
     setFormData({
       title: '',
       description: '',
@@ -196,7 +207,7 @@ export default function VideoMeetingsDashboard() {
       recordingEnabled: true,
       maxParticipants: 10
     })
-    alert('Meeting created successfully!')
+  // handled above
   }
 
   const handleJoinMeeting = (meeting: any) => {

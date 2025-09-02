@@ -245,7 +245,20 @@ export default function EmployeeDashboard() {
   };
 
   const handlePromotionRequest = () => {
-    alert('Promotion request feature coming soon!');
+    // Call placeholder API to persist promotion request
+    fetch('/api/placeholder/promotion-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'Requested via dashboard' })
+    })
+      .then(res => res.json())
+      .then((data) => {
+        alert(data?.message || 'Promotion request submitted (placeholder)')
+      })
+      .catch((err) => {
+        console.error(err)
+        alert('Failed to submit promotion request (placeholder)')
+      })
   };
 
   const markTaskInProgress = (taskId: string) => {
@@ -277,6 +290,22 @@ export default function EmployeeDashboard() {
       )
     );
   };
+
+  const postChatMessage = (memberId?: string) => {
+    fetch('/api/placeholder/chat-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: memberId || 'team', message: 'Hello from dashboard (placeholder)' })
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert(data?.message || 'Message sent (placeholder)')
+      })
+      .catch(err => {
+        console.error(err)
+        alert('Failed to send message (placeholder)')
+      })
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -464,10 +493,10 @@ export default function EmployeeDashboard() {
                     </div>
                   </div>
                   
-                  <Button size="sm" variant="outline">
-                    <MessageSquare className="w-4 h-4 mr-1" />
-                    Chat
-                  </Button>
+                    <Button size="sm" variant="outline" onClick={() => postChatMessage(member.id)}>
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      Chat
+                    </Button>
                 </div>
               ))}
             </div>

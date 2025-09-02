@@ -26,16 +26,67 @@ export async function GET(request: NextRequest) {
       where: { employeeId: employee.id }
     });
 
-    return NextResponse.json({ 
-      settings: settings || {
-        theme: 'system',
-        language: 'en',
-        timezone: 'UTC',
+    // Return settings in the format expected by the settings page
+    const defaultSettings = {
+      profile: {
+        phone: employee.phone || '',
+        department: employee.departmentId || '',
+        jobTitle: employee.position || ''
+      },
+      notifications: {
         emailNotifications: true,
         pushNotifications: true,
-        smsNotifications: false
+        smsNotifications: false,
+        taskReminders: true,
+        meetingReminders: true,
+        weeklyReports: true
+      },
+      preferences: {
+        theme: 'dark',
+        timeFormat: '24h',
+        dateFormat: 'MM/DD/YYYY',
+        timezone: 'UTC',
+        language: 'en'
+      },
+      security: {
+        twoFactorEnabled: false,
+        sessionTimeout: 30,
+        passwordLastChanged: null
       }
-    });
+    };
+
+    if (settings) {
+      // Map existing settings to the expected format
+      return NextResponse.json({
+        profile: {
+          phone: employee.phone || '',
+          department: employee.departmentId || '',
+          jobTitle: employee.position || ''
+        },
+        notifications: {
+          emailNotifications: settings.emailNotifications,
+          pushNotifications: settings.pushNotifications,
+          smsNotifications: settings.smsNotifications,
+          taskReminders: settings.taskReminders,
+          meetingReminders: true, // Not in current schema, use default
+          weeklyReports: settings.weeklyReports
+        },
+        preferences: {
+          theme: settings.theme,
+          timeFormat: settings.timeFormat,
+          dateFormat: settings.dateFormat,
+          timezone: settings.timezone,
+          language: settings.language
+        },
+        security: {
+          twoFactorEnabled: false, // Not in current schema
+          sessionTimeout: 30, // Not in current schema
+          passwordLastChanged: null // Not in current schema
+        }
+      });
+    } else {
+      return NextResponse.json(defaultSettings);
+    }
 
   } catch (error) {
     console.error('User settings fetch error:', error);
@@ -56,14 +107,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { 
-      theme, 
-      language, 
-      timezone, 
-      emailNotifications,
-      pushNotifications,
-      smsNotifications 
-    } = body;
 
     // Find the employee record for this user
     const employee = await prisma.employee.findUnique({
@@ -74,30 +117,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
     }
 
+    // Extract settings from the new structure
+    const notificationSettings = body.notifications || {};
+    const preferenceSettings = body.preferences || {};
+
     // Update or create user settings
     const settings = await prisma.userSettings.upsert({
       where: { employeeId: employee.id },
       update: {
-        theme,
-        language,
-        timezone,
-        emailNotifications,
-        pushNotifications,
-        smsNotifications,
+        theme: preferenceSettings.theme || 'dark',
+        language: preferenceSettings.language || 'en',
+        timezone: preferenceSettings.timezone || 'UTC',
+        dateFormat: preferenceSettings.dateFormat || 'MM/DD/YYYY',
+        timeFormat: preferenceSettings.timeFormat || '24h',
+        emailNotifications: notificationSettings.emailNotifications !== undefined ? notificationSettings.emailNotifications : true,
+        pushNotifications: notificationSettings.pushNotifications !== undefined ? notificationSettings.pushNotifications : true,
+        smsNotifications: notificationSettings.smsNotifications !== undefined ? notificationSettings.smsNotifications : false,
+        weeklyReports: notificationSettings.weeklyReports !== undefined ? notificationSettings.weeklyReports : true,
+        taskReminders: notificationSettings.taskReminders !== undefined ? notificationSettings.taskReminders : true,
       },
       create: {
         employeeId: employee.id,
-        theme: theme || 'system',
-        language: language || 'en',
-        timezone: timezone || 'UTC',
-        emailNotifications: emailNotifications !== undefined ? emailNotifications : true,
-        pushNotifications: pushNotifications !== undefined ? pushNotifications : true,
-        smsNotifications: smsNotifications !== undefined ? smsNotifications : false,
+        theme: preferenceSettings.theme || 'dark',
+        language: preferenceSettings.language || 'en',
+        timezone: preferenceSettings.timezone || 'UTC',
+        dateFormat: preferenceSettings.dateFormat || 'MM/DD/YYYY',
+        timeFormat: preferenceSettings.timeFormat || '24h',
+        emailNotifications: notificationSettings.emailNotifications !== undefined ? notificationSettings.emailNotifications : true,
+        pushNotifications: notificationSettings.pushNotifications !== undefined ? notificationSettings.pushNotifications : true,
+        smsNotifications: notificationSettings.smsNotifications !== undefined ? notificationSettings.smsNotifications : false,
+        weeklyReports: notificationSettings.weeklyReports !== undefined ? notificationSettings.weeklyReports : true,
+        taskReminders: notificationSettings.taskReminders !== undefined ? notificationSettings.taskReminders : true,
       }
     });
 
     return NextResponse.json({ 
-      success: true,
+      message: 'Settings updated successfully',
       settings
     });
 

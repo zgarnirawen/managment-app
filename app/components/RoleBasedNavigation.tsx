@@ -23,7 +23,10 @@ import {
   Crown,
   ChevronDown,
   Menu,
-  X
+  X,
+  FolderOpen,
+  GitBranch,
+  GraduationCap
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -70,15 +73,54 @@ export default function RoleBasedNavigation() {
       roles: ['intern', 'employee', 'manager', 'admin', 'super_admin']
     },
     {
+      id: 'profile',
+      label: 'My Profile',
+      icon: Users,
+      href: '/profile',
+      roles: ['intern', 'employee', 'manager', 'admin', 'super_admin']
+    },
+    {
       id: 'tasks',
       label: 'Tasks',
       icon: Target,
-      href: '/tasks',
+      href: '/dashboard/tasks',
       roles: ['intern', 'employee', 'manager', 'admin', 'super_admin'],
       submenu: [
         { id: 'my-tasks', label: 'My Tasks', icon: Target, href: '/tasks/my', roles: ['intern', 'employee', 'manager', 'admin', 'super_admin'] },
         { id: 'assign-tasks', label: 'Assign Tasks', icon: Users, href: '/tasks/assign', roles: ['manager', 'admin', 'super_admin'] }
       ]
+    },
+    {
+      id: 'team-management',
+      label: 'Team Management',
+      icon: Users,
+      href: '/team-management',
+      roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      id: 'projects',
+      label: 'Projects',
+      icon: FolderOpen,
+      href: '/dashboard/projects',
+      roles: ['manager', 'admin', 'super_admin'],
+      submenu: [
+        { id: 'all-projects', label: 'All Projects', icon: FolderOpen, href: '/dashboard/projects', roles: ['manager', 'admin', 'super_admin'] },
+        { id: 'sprints', label: 'Sprints', icon: GitBranch, href: '/dashboard/sprints', roles: ['manager', 'admin', 'super_admin'] }
+      ]
+    },
+    {
+      id: 'employees',
+      label: 'Employees',
+      icon: Users,
+      href: '/dashboard/employees',
+      roles: ['manager', 'admin', 'super_admin']
+    },
+    {
+      id: 'interns',
+      label: 'Interns',
+      icon: GraduationCap,
+      href: '/dashboard/interns',
+      roles: ['manager', 'admin', 'super_admin']
     },
     {
       id: 'learning',

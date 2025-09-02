@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '../../lib/prisma';
 import { createTaskSchema } from '../../lib/validations';
 import { ZodError } from 'zod';
-import { notifyTaskAssignment } from '../../services/notificationService';
 
 export async function GET(request: Request) {
   try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const sprintId = searchParams.get('sprintId');
     const employeeId = searchParams.get('employeeId');
@@ -40,6 +46,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await request.json();
     
     // Validate the incoming data
@@ -91,10 +103,19 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send notification if task is assigned to an employee
+    // Create notification if task is assigned to an employee
     if (validatedData.employeeId) {
       try {
-        await notifyTaskAssignment(task.id, validatedData.employeeId);
+        await prisma.notification.create({
+          data: {
+            employeeId: validatedData.employeeId,
+            message: `You have been assigned a new task: "${task.title}"`,
+            type: 'TASK_ASSIGNED',
+            metadata: {
+              taskId: task.id
+            }
+          }
+        });
       } catch (notificationError) {
         console.error('Failed to send task assignment notification:', notificationError);
         // Don't fail the task creation if notification fails

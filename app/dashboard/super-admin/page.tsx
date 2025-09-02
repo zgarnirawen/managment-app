@@ -52,7 +52,7 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (isLoaded && user) {
       const userRole = user.unsafeMetadata?.role;
-      if (userRole !== 'super_admin') {
+      if (userRole !== 'super_administrator') {
         router.push('/dashboard');
         return;
       }
@@ -87,37 +87,61 @@ export default function SuperAdminDashboard() {
 
   const promoteToAdmin = async (userId: string) => {
     try {
-      // Implementation for promoting user to admin
-      console.log('Promoting user to admin:', userId);
-      // API call to update user role
-      // Refresh data
+      const res = await fetch('/api/admin/role-promotion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: userId, action: 'promote' })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Promotion failed');
+      }
+      // Minimal feedback
+      window.alert(data?.message || 'User promoted to admin');
       fetchGlobalData();
     } catch (error) {
       console.error('Failed to promote user:', error);
+      window.alert(('Failed to promote user: ' + (error as any)?.message) || 'Promotion error');
     }
   };
 
   const revokeAdminRole = async (userId: string) => {
     try {
-      // Implementation for revoking admin role
-      console.log('Revoking admin role:', userId);
-      // API call to update user role
-      // Refresh data
+      // Ask API to demote the user (server will pick the appropriate lower role)
+      const res = await fetch('/api/admin/role-promotion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: userId, action: 'demote' })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Demotion failed');
+      }
+      window.alert(data?.message || 'User demoted successfully');
       fetchGlobalData();
     } catch (error) {
       console.error('Failed to revoke admin role:', error);
+      window.alert(('Failed to revoke admin role: ' + (error as any)?.message) || 'Demotion error');
     }
   };
 
   const transferSuperAdminRole = async (newSuperAdminId: string) => {
     try {
-      // Implementation for transferring super admin role
-      console.log('Transferring super admin role to:', newSuperAdminId);
-      // API call to transfer role
-      // Redirect to dashboard after transfer
+      const res = await fetch('/api/admin/role-promotion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: newSuperAdminId, action: 'transfer_super_admin' })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Transfer failed');
+      }
+      window.alert(data?.message || 'Super admin role transferred');
+      // After transfer, redirect to the main dashboard (user may have reduced privileges)
       router.push('/dashboard');
     } catch (error) {
       console.error('Failed to transfer super admin role:', error);
+      window.alert(('Failed to transfer role: ' + (error as any)?.message) || 'Transfer error');
     }
   };
 
@@ -139,6 +163,7 @@ export default function SuperAdminDashboard() {
   const tabs = [
     { id: 'overview', label: 'Global Overview', icon: Globe },
     { id: 'user_management', label: 'User Management', icon: Users },
+    { id: 'team_management', label: 'Team Management', icon: Users },
     { id: 'admin_control', label: 'Admin Control', icon: Crown },
     { id: 'system_monitor', label: 'System Monitor', icon: Activity },
     { id: 'security', label: 'Security Center', icon: Shield },
@@ -395,6 +420,132 @@ export default function SuperAdminDashboard() {
                   Transfer Super Admin Role
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'team_management' && (
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Global Team Management</h3>
+              <button
+                onClick={() => router.push('/team-management')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Access Full Team Management
+              </button>
+            </div>
+            
+            {/* Global Team Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Total Teams</h4>
+                <div className="text-2xl font-bold text-blue-700">15</div>
+                <div className="text-sm text-blue-600">Across all departments</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="font-medium text-green-900 mb-2">Managers</h4>
+                <div className="text-2xl font-bold text-green-700">{stats.totalManagers}</div>
+                <div className="text-sm text-green-600">Team leaders</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h4 className="font-medium text-purple-900 mb-2">Employees</h4>
+                <div className="text-2xl font-bold text-purple-700">{stats.totalEmployees}</div>
+                <div className="text-sm text-purple-600">Team members</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h4 className="font-medium text-yellow-900 mb-2">Interns</h4>
+                <div className="text-2xl font-bold text-yellow-700">{stats.totalInterns}</div>
+                <div className="text-sm text-yellow-600">In training</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h4 className="font-medium text-red-900 mb-2">Admins</h4>
+                <div className="text-2xl font-bold text-red-700">{stats.totalAdmins}</div>
+                <div className="text-sm text-red-600">System administrators</div>
+              </div>
+            </div>
+
+            {/* Global Team Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-4">Team Distribution by Department</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Engineering</span>
+                    <span className="text-sm font-medium text-gray-900">5 teams (45 members)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Marketing</span>
+                    <span className="text-sm font-medium text-gray-900">3 teams (22 members)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Sales</span>
+                    <span className="text-sm font-medium text-gray-900">4 teams (28 members)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">HR</span>
+                    <span className="text-sm font-medium text-gray-900">2 teams (15 members)</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Finance</span>
+                    <span className="text-sm font-medium text-gray-900">1 team (8 members)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-4">Team Performance Metrics</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Average Team Size</span>
+                    <span className="text-sm font-medium text-gray-900">8.2 members</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Team Productivity</span>
+                    <span className="text-sm font-medium text-green-600">92% efficiency</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Cross-team Collaboration</span>
+                    <span className="text-sm font-medium text-blue-600">78% active</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Team Satisfaction</span>
+                    <span className="text-sm font-medium text-purple-600">4.6/5.0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Management Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <button
+                onClick={() => router.push('/team-management')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Users className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-gray-900">Manage All Teams</span>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/employees')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Users className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-gray-900">Employee Directory</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('admin_control')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Crown className="w-5 h-5 text-red-600" />
+                <span className="font-medium text-gray-900">Admin Management</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('system_monitor')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Activity className="w-5 h-5 text-purple-600" />
+                <span className="font-medium text-gray-900">System Monitor</span>
+              </button>
             </div>
           </div>
         )}

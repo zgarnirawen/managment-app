@@ -26,8 +26,8 @@ model Employee {
   name                         String
   email                        String                 @unique
   clerkUserId                  String?                @unique @map("clerk_user_id")
-  role                         String                 @default("Employee") // Keep for backwards compatibility
-  roleId                       String?                // Make optional for gradual migration
+  role                         String                 @default("Employee")
+  roleId                       String?
   position                     String?
   phone                        String?
   address                      String?
@@ -40,57 +40,65 @@ model Employee {
   notificationPreferences      String?
   createdAt                    DateTime               @default(now())
   updatedAt                    DateTime               @updatedAt
-  calendarSyncSettings    CalendarSyncSettings[]
-  createdChannels         ChatChannel[]          @relation("ChannelCreator")
-  channelMemberships      ChatChannelMember[]    @relation("ChannelMemberships")
-  channelMessages         ChatChannelMessage[]   @relation("ChannelMessageSender")
-  sentChatMessages        ChatMessage[]
-  messageReactions        ChatMessageReaction[]
-  comments                Comment[]              @relation("CommentAuthor")
-  receivedDirectMessages  DirectMessage[]        @relation("ReceivedDirectMessages")
-  sentDirectMessages      DirectMessage[]        @relation("SentDirectMessages")
-  department              Department?            @relation(fields: [departmentId], references: [id])
-  roleModel               Role?                  @relation(fields: [roleId], references: [id])
-  manager                 Employee?              @relation("ManagerEmployee", fields: [managerId], references: [id])
-  subordinates            Employee[]             @relation("ManagerEmployee")
-  internProfile           InternProfile?
-  mentorInterns           InternProfile[]        @relation("MentorInterns")
-  assignedInternTasks     InternTask[]           @relation("InternTaskAssigner")
-  internTasks             InternTask[]           @relation("InternTaskAssignee")
-  leaveRequests           LeaveRequest[]
-  organizedMeetings       Meeting[]              @relation("MeetingOrganizer")
-  notifications           Notification[]
-  uploadedResources       Resource[]
-  tasks                   Task[]                 @relation("EmployeeTasks")
-  timeEntries             TimeEntry[]
-  weeklySummaries         WeeklySummary[]
-  mentions                Comment[]              @relation("CommentMentions")
-  projects                Project[]              @relation("EmployeeProjects")
-  attendingMeetings       Meeting[]              @relation("MeetingAttendees")
-  createdPolicies         Policy[]               @relation("PolicyCreator")
-  approvedPolicies        Policy[]               @relation("PolicyApprover")
-  userSettings            UserSettings?
+  uploadedAttachments          Attachment[]           @relation("EmployeeAttachments")
+  attendance                   Attendance[]           @relation("EmployeeAttendance")
+  createdCalendarEvents        CalendarEvent[]        @relation("CalendarEventCreator")
+  calendarSyncSettings         CalendarSyncSettings[]
+  createdChannels              ChatChannel[]          @relation("ChannelCreator")
+  channelMemberships           ChatChannelMember[]    @relation("ChannelMemberships")
+  channelMessages              ChatChannelMessage[]   @relation("ChannelMessageSender")
+  sentChatMessages             ChatMessage[]
+  messageReactions             ChatMessageReaction[]
+  comments                     Comment[]              @relation("CommentAuthor")
+  receivedDirectMessages       DirectMessage[]        @relation("ReceivedDirectMessages")
+  sentDirectMessages           DirectMessage[]        @relation("SentDirectMessages")
+  department                   Department?            @relation(fields: [departmentId], references: [id])
+  manager                      Employee?              @relation("ManagerEmployee", fields: [managerId], references: [id])
+  subordinates                 Employee[]             @relation("ManagerEmployee")
+  roleModel                    Role?                  @relation(fields: [roleId], references: [id])
+  internProfile                InternProfile?
+  mentorInterns                InternProfile[]        @relation("MentorInterns")
+  assignedInternTasks          InternTask[]           @relation("InternTaskAssigner")
+  internTasks                  InternTask[]           @relation("InternTaskAssignee")
+  leaveRequests                LeaveRequest[]
+  organizedMeetings            Meeting[]              @relation("MeetingOrganizer")
+  notifications                Notification[]
+  performanceMetrics           PerformanceMetric[]    @relation("EmployeeMetrics")
+  approvedPolicies             Policy[]               @relation("PolicyApprover")
+  createdPolicies              Policy[]               @relation("PolicyCreator")
+  uploadedResources            Resource[]
+  tasks                        Task[]                 @relation("EmployeeTasks")
+  taskMentions                 TaskMention[]          @relation("EmployeeMentions")
+  timeEntries                  TimeEntry[]
+  userSettings                 UserSettings?
+  weeklySummaries              WeeklySummary[]
+  mentions                     Comment[]              @relation("CommentMentions")
+  projects                     Project[]              @relation("EmployeeProjects")
+  attendingMeetings            Meeting[]              @relation("MeetingAttendees")
 }
 
 model Task {
-  id          String       @id @default(cuid())
-  title       String
-  description String?
-  status      TaskStatus   @default(TODO)
-  priority    TaskPriority @default(MEDIUM)
-  dueDate     DateTime?
-  deadline    DateTime?
-  employeeId  String?
-  projectId   String?
-  sprintId    String?
-  attachments String[]     @default([])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  comments    Comment[]    @relation("TaskComments")
-  subtasks    SubTask[]
-  assignedTo  Employee?    @relation("EmployeeTasks", fields: [employeeId], references: [id])
-  project     Project?     @relation(fields: [projectId], references: [id])
-  sprint      Sprint?      @relation("SprintTasks", fields: [sprintId], references: [id])
+  id              String          @id @default(cuid())
+  title           String
+  description     String?
+  status          TaskStatus      @default(TODO)
+  priority        TaskPriority    @default(MEDIUM)
+  dueDate         DateTime?
+  deadline        DateTime?
+  employeeId      String?
+  projectId       String?
+  sprintId        String?
+  attachments     String[]        @default([])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  taskAttachments Attachment[]    @relation("TaskAttachments")
+  calendarEvents  CalendarEvent[] @relation("TaskEvents")
+  comments        Comment[]       @relation("TaskComments")
+  subtasks        SubTask[]
+  assignedTo      Employee?       @relation("EmployeeTasks", fields: [employeeId], references: [id])
+  project         Project?        @relation(fields: [projectId], references: [id])
+  sprint          Sprint?         @relation("SprintTasks", fields: [sprintId], references: [id])
+  taskMentions    TaskMention[]   @relation("TaskMentions")
 }
 
 model SubTask {
@@ -115,47 +123,49 @@ model Sprint {
 }
 
 model Meeting {
-  id          String      @id @default(cuid())
-  title       String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  location    String?
-  type        MeetingType @default(GENERAL)
-  organizerId String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  organizer   Employee    @relation("MeetingOrganizer", fields: [organizerId], references: [id])
-  attendees   Employee[]  @relation("MeetingAttendees")
+  id             String          @id @default(cuid())
+  title          String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  location       String?
+  type           MeetingType     @default(GENERAL)
+  organizerId    String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  calendarEvents CalendarEvent[] @relation("MeetingEvents")
+  organizer      Employee        @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+  attendees      Employee[]      @relation("MeetingAttendees")
 }
 
 model Project {
-  id           String           @id @default(cuid())
-  name         String
-  description  String?
-  departmentId String?
-  startDate    DateTime         @default(now())
-  endDate      DateTime?
-  status       ProjectStatus    @default(PLANNED)
-  attachments  String[]         @default([])
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  comments     Comment[]        @relation("ProjectComments")
-  department   Department?      @relation(fields: [departmentId], references: [id])
-  tasks        Task[]
-  employees    Employee[]       @relation("EmployeeProjects")
-  members      ProjectMember[]
+  id                 String          @id @default(cuid())
+  name               String
+  description        String?
+  departmentId       String?
+  startDate          DateTime        @default(now())
+  endDate            DateTime?
+  status             ProjectStatus   @default(PLANNED)
+  attachments        String[]        @default([])
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  projectAttachments Attachment[]    @relation("ProjectAttachments")
+  calendarEvents     CalendarEvent[] @relation("ProjectEvents")
+  comments           Comment[]       @relation("ProjectComments")
+  department         Department?     @relation(fields: [departmentId], references: [id])
+  members            ProjectMember[]
+  tasks              Task[]
+  employees          Employee[]      @relation("EmployeeProjects")
 }
 
 model ProjectMember {
   id        String   @id @default(cuid())
   projectId String
   userId    String
-  role      String   @default("MEMBER") // OWNER, MANAGER, MEMBER
+  role      String   @default("MEMBER")
   joinedAt  DateTime @default(now())
-  
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   @@unique([projectId, userId])
 }
 
@@ -163,24 +173,25 @@ model TeamMember {
   id       String   @id @default(cuid())
   teamId   String
   userId   String
-  role     String   @default("MEMBER") // LEADER, MEMBER
+  role     String   @default("MEMBER")
   joinedAt DateTime @default(now())
-  
+
   @@unique([teamId, userId])
 }
 
 model LeaveRequest {
-  id              String      @id @default(cuid())
-  type            LeaveType   @default(VACATION)
+  id              String          @id @default(cuid())
+  type            LeaveType       @default(VACATION)
   startDate       DateTime
   endDate         DateTime
   reason          String?
-  status          LeaveStatus @default(PENDING)
+  status          LeaveStatus     @default(PENDING)
   employeeId      String
   rejectionReason String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  employee        Employee    @relation(fields: [employeeId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  calendarEvents  CalendarEvent[] @relation("LeaveRequestEvents")
+  employee        Employee        @relation(fields: [employeeId], references: [id])
 }
 
 model TimeEntry {
@@ -203,7 +214,7 @@ model TimeEntry {
 model Role {
   id        String     @id @default(uuid())
   name      String     @unique
-  employees Employee[] @relation()
+  employees Employee[]
 }
 
 model WeeklySummary {
@@ -222,17 +233,18 @@ model WeeklySummary {
 }
 
 model Comment {
-  id        String     @id @default(cuid())
-  content   String
-  taskId    String?
-  projectId String?
-  authorId  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  author    Employee   @relation("CommentAuthor", fields: [authorId], references: [id])
-  project   Project?   @relation("ProjectComments", fields: [projectId], references: [id], onDelete: Cascade)
-  task      Task?      @relation("TaskComments", fields: [taskId], references: [id], onDelete: Cascade)
-  mentions  Employee[] @relation("CommentMentions")
+  id              String        @id @default(cuid())
+  content         String
+  taskId          String?
+  projectId       String?
+  authorId        String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  author          Employee      @relation("CommentAuthor", fields: [authorId], references: [id])
+  project         Project?      @relation("ProjectComments", fields: [projectId], references: [id], onDelete: Cascade)
+  task            Task?         @relation("TaskComments", fields: [taskId], references: [id], onDelete: Cascade)
+  commentMentions TaskMention[] @relation("CommentMentions")
+  mentions        Employee[]    @relation("CommentMentions")
 
   @@index([taskId])
   @@index([projectId])
@@ -299,7 +311,7 @@ model InternProfile {
   yearOfStudy Int?
   skills      String[]  @default([])
   goals       String?
-  status      String    @default("ACTIVE") // ACTIVE, COMPLETED, PROMOTED
+  status      String    @default("ACTIVE")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
@@ -459,6 +471,165 @@ model ChatMessageReaction {
 
   @@unique([emoji, employeeId, channelMessageId])
   @@unique([emoji, employeeId, directMessageId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  userName   String
+  userRole   String
+  action     String
+  resource   String
+  resourceId String?
+  details    String
+  severity   String   @default("low")
+  ipAddress  String
+  userAgent  String
+  timestamp  DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+}
+
+model Policy {
+  id                 String    @id @default(cuid())
+  title              String
+  category           String
+  description        String
+  content            String
+  version            String    @default("1.0")
+  status             String    @default("draft")
+  tags               String[]  @default([])
+  effectiveDate      DateTime
+  expiryDate         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  createdById        String
+  approvedById       String?
+  approvedByEmployee Employee? @relation("PolicyApprover", fields: [approvedById], references: [id])
+  createdByEmployee  Employee  @relation("PolicyCreator", fields: [createdById], references: [id])
+
+  @@index([category])
+  @@index([status])
+  @@index([effectiveDate])
+}
+
+model UserSettings {
+  id                  String   @id @default(cuid())
+  employeeId          String   @unique
+  bio                 String?
+  theme               String   @default("system")
+  language            String   @default("en")
+  timezone            String   @default("UTC")
+  dateFormat          String   @default("MM/DD/YYYY")
+  timeFormat          String   @default("12h")
+  weekStartsOn        Int      @default(0)
+  emailNotifications  Boolean  @default(true)
+  pushNotifications   Boolean  @default(true)
+  smsNotifications    Boolean  @default(false)
+  weeklyReports       Boolean  @default(true)
+  taskReminders       Boolean  @default(true)
+  fontSize            String   @default("medium")
+  sidebarCollapsed    Boolean  @default(false)
+  profileVisible      Boolean  @default(true)
+  allowDirectMessages Boolean  @default(true)
+  shareActivityStatus Boolean  @default(true)
+  autoSave            Boolean  @default(true)
+  reducedMotion       Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  employee            Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id           String           @id @default(cuid())
+  employeeId   String
+  clockInTime  DateTime
+  clockOutTime DateTime?
+  breakStart   DateTime?
+  breakEnd     DateTime?
+  totalHours   Float?
+  location     String?
+  notes        String?
+  status       AttendanceStatus @default(CHECKED_IN)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  employee     Employee         @relation("EmployeeAttendance", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, clockInTime])
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  fileName   String
+  fileUrl    String
+  fileSize   Int?
+  fileType   String?
+  uploadedBy String
+  taskId     String?
+  projectId  String?
+  createdAt  DateTime @default(now())
+  project    Project? @relation("ProjectAttachments", fields: [projectId], references: [id], onDelete: Cascade)
+  task       Task?    @relation("TaskAttachments", fields: [taskId], references: [id], onDelete: Cascade)
+  uploader   Employee @relation("EmployeeAttachments", fields: [uploadedBy], references: [id])
+
+  @@index([taskId])
+  @@index([projectId])
+}
+
+model CalendarEvent {
+  id             String            @id @default(cuid())
+  title          String
+  description    String?
+  startDateTime  DateTime
+  endDateTime    DateTime
+  allDay         Boolean           @default(false)
+  eventType      CalendarEventType @default(MEETING)
+  location       String?
+  createdBy      String
+  attendees      String[]          @default([])
+  taskId         String?
+  projectId      String?
+  meetingId      String?
+  leaveRequestId String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  creator        Employee          @relation("CalendarEventCreator", fields: [createdBy], references: [id])
+  leaveRequest   LeaveRequest?     @relation("LeaveRequestEvents", fields: [leaveRequestId], references: [id])
+  meeting        Meeting?          @relation("MeetingEvents", fields: [meetingId], references: [id])
+  project        Project?          @relation("ProjectEvents", fields: [projectId], references: [id])
+  task           Task?             @relation("TaskEvents", fields: [taskId], references: [id])
+
+  @@index([createdBy, startDateTime])
+}
+
+model PerformanceMetric {
+  id          String                @id @default(cuid())
+  employeeId  String
+  metricType  PerformanceMetricType
+  value       Float
+  period      String
+  description String?
+  createdAt   DateTime              @default(now())
+  employee    Employee              @relation("EmployeeMetrics", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, metricType, period])
+  @@index([employeeId, period])
+}
+
+model TaskMention {
+  id          String   @id @default(cuid())
+  taskId      String
+  commentId   String
+  mentionedId String
+  createdAt   DateTime @default(now())
+  comment     Comment  @relation("CommentMentions", fields: [commentId], references: [id], onDelete: Cascade)
+  mentioned   Employee @relation("EmployeeMentions", fields: [mentionedId], references: [id])
+  task        Task     @relation("TaskMentions", fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, mentionedId])
 }
 
 enum MeetingType {
@@ -631,74 +802,31 @@ enum ChatMessageType {
   SYSTEM
 }
 
-model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String
-  userName   String
-  userRole   String
-  action     String
-  resource   String
-  resourceId String?
-  details    String
-  severity   String   @default("low") // low, medium, high, critical
-  ipAddress  String
-  userAgent  String
-  timestamp  DateTime @default(now())
-  
-  @@index([timestamp])
-  @@index([userId])
-  @@index([action])
-  @@index([resource])
+enum AttendanceStatus {
+  CHECKED_IN
+  CHECKED_OUT
+  ON_BREAK
+  LATE
+  ABSENT
 }
 
-model Policy {
-  id                 String    @id @default(cuid())
-  title              String
-  category           String
-  description        String
-  content            String
-  version            String    @default("1.0")
-  status             String    @default("draft") // draft, active, archived
-  tags               String[]  @default([])
-  effectiveDate      DateTime
-  expiryDate         DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  createdById        String
-  approvedById       String?
-  
-  createdByEmployee  Employee  @relation("PolicyCreator", fields: [createdById], references: [id])
-  approvedByEmployee Employee? @relation("PolicyApprover", fields: [approvedById], references: [id])
-  
-  @@index([category])
-  @@index([status])
-  @@index([effectiveDate])
+enum CalendarEventType {
+  MEETING
+  TASK_DEADLINE
+  PROJECT_MILESTONE
+  LEAVE
+  HOLIDAY
+  TRAINING
+  PERSONAL
 }
 
-model UserSettings {
-  id                    String    @id @default(cuid())
-  employeeId            String    @unique
-  bio                   String?
-  theme                 String    @default("system")
-  language              String    @default("en")
-  timezone              String    @default("UTC")
-  dateFormat            String    @default("MM/DD/YYYY")
-  timeFormat            String    @default("12h")
-  weekStartsOn          Int       @default(0) // 0 = Sunday, 1 = Monday
-  emailNotifications    Boolean   @default(true)
-  pushNotifications     Boolean   @default(true)
-  smsNotifications      Boolean   @default(false)
-  weeklyReports         Boolean   @default(true)
-  taskReminders         Boolean   @default(true)
-  fontSize              String    @default("medium")
-  sidebarCollapsed      Boolean   @default(false)
-  profileVisible        Boolean   @default(true)
-  allowDirectMessages   Boolean   @default(true)
-  shareActivityStatus   Boolean   @default(true)
-  autoSave              Boolean   @default(true)
-  reducedMotion         Boolean   @default(false)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  employee              Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+enum PerformanceMetricType {
+  TASKS_COMPLETED
+  HOURS_WORKED
+  PRODUCTIVITY_SCORE
+  ATTENDANCE_RATE
+  GOAL_COMPLETION
+  TEAM_COLLABORATION
+  CUSTOMER_SATISFACTION
+  INNOVATION_INDEX
 }

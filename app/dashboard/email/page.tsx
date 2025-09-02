@@ -143,18 +143,22 @@ export default function EmailDashboard() {
   })
 
   const handleSendEmail = () => {
-    // Simulate sending email
-    console.log('Sending email:', composeData)
-    setShowCompose(false)
-    setComposeData({
-      to: '',
-      cc: '',
-      bcc: '',
-      subject: '',
-      body: '',
-      priority: 'medium'
+    // Call placeholder API to send email
+    fetch('/api/placeholder/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(composeData)
     })
-    alert('Email sent successfully!')
+      .then(res => res.json())
+      .then((data) => {
+        setShowCompose(false)
+        setComposeData({ to: '', cc: '', bcc: '', subject: '', body: '', priority: 'medium' })
+        alert(data?.message || 'Email sent (placeholder)')
+      })
+      .catch((err) => {
+        console.error(err)
+        alert('Failed to send email (placeholder)')
+      })
   }
 
   const handleEmailAction = (action: string, emailId: number) => {

@@ -91,6 +91,7 @@ export default function AdminDashboard() {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'promotions', label: 'Promotions', icon: Award },
     { id: 'users', label: 'User Management', icon: Users },
+    { id: 'teams', label: 'Team Management', icon: Users },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'system', label: 'System', icon: Database },
     { id: 'reports', label: 'Reports', icon: TrendingUp }
@@ -314,6 +315,69 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">User Management</h3>
             <p className="text-gray-600">Advanced user management features coming soon...</p>
+          </div>
+        )}
+
+        {activeTab === 'teams' && (
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Team Management</h3>
+              <button
+                onClick={() => router.push('/team-management')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Go to Full Team Management
+              </button>
+            </div>
+            
+            {/* Team Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Total Teams</h4>
+                <div className="text-2xl font-bold text-blue-700">8</div>
+                <div className="text-sm text-blue-600">Active teams</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="font-medium text-green-900 mb-2">Team Members</h4>
+                <div className="text-2xl font-bold text-green-700">{stats.totalEmployees}</div>
+                <div className="text-sm text-green-600">Across all teams</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h4 className="font-medium text-purple-900 mb-2">Managers</h4>
+                <div className="text-2xl font-bold text-purple-700">{stats.totalManagers}</div>
+                <div className="text-sm text-purple-600">Team leaders</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h4 className="font-medium text-yellow-900 mb-2">Departments</h4>
+                <div className="text-2xl font-bold text-yellow-700">5</div>
+                <div className="text-sm text-yellow-600">Active departments</div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <button
+                onClick={() => router.push('/team-management')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Users className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-gray-900">Manage All Teams</span>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/employees')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Users className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-gray-900">Employee Directory</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('departments')}
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Database className="w-5 h-5 text-purple-600" />
+                <span className="font-medium text-gray-900">Department Management</span>
+              </button>
+            </div>
           </div>
         )}
 
