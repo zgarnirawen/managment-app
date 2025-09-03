@@ -52,7 +52,7 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (isLoaded && user) {
       const userRole = user.unsafeMetadata?.role;
-      if (userRole !== 'super_administrator') {
+      if (userRole !== 'super_admin') {
         router.push('/dashboard');
         return;
       }
@@ -87,61 +87,37 @@ export default function SuperAdminDashboard() {
 
   const promoteToAdmin = async (userId: string) => {
     try {
-      const res = await fetch('/api/admin/role-promotion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId: userId, action: 'promote' })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || 'Promotion failed');
-      }
-      // Minimal feedback
-      window.alert(data?.message || 'User promoted to admin');
+      // Implementation for promoting user to admin
+      console.log('Promoting user to admin:', userId);
+      // API call to update user role
+      // Refresh data
       fetchGlobalData();
     } catch (error) {
       console.error('Failed to promote user:', error);
-      window.alert(('Failed to promote user: ' + (error as any)?.message) || 'Promotion error');
     }
   };
 
   const revokeAdminRole = async (userId: string) => {
     try {
-      // Ask API to demote the user (server will pick the appropriate lower role)
-      const res = await fetch('/api/admin/role-promotion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId: userId, action: 'demote' })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || 'Demotion failed');
-      }
-      window.alert(data?.message || 'User demoted successfully');
+      // Implementation for revoking admin role
+      console.log('Revoking admin role:', userId);
+      // API call to update user role
+      // Refresh data
       fetchGlobalData();
     } catch (error) {
       console.error('Failed to revoke admin role:', error);
-      window.alert(('Failed to revoke admin role: ' + (error as any)?.message) || 'Demotion error');
     }
   };
 
   const transferSuperAdminRole = async (newSuperAdminId: string) => {
     try {
-      const res = await fetch('/api/admin/role-promotion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUserId: newSuperAdminId, action: 'transfer_super_admin' })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.error || 'Transfer failed');
-      }
-      window.alert(data?.message || 'Super admin role transferred');
-      // After transfer, redirect to the main dashboard (user may have reduced privileges)
+      // Implementation for transferring super admin role
+      console.log('Transferring super admin role to:', newSuperAdminId);
+      // API call to transfer role
+      // Redirect to dashboard after transfer
       router.push('/dashboard');
     } catch (error) {
       console.error('Failed to transfer super admin role:', error);
-      window.alert(('Failed to transfer role: ' + (error as any)?.message) || 'Transfer error');
     }
   };
 

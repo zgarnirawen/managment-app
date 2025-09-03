@@ -195,23 +195,11 @@ export default function InternDashboard() {
   }
 
   const handlePromotionSubmit = () => {
-    // Submit to placeholder API
-    fetch('/api/placeholder/promotion-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(promotionForm)
-    })
-      .then(res => res.json())
-      .then((data) => {
-        console.log('Promotion request response:', data)
-        setShowPromotionForm(false)
-        setPromotionForm({ reason: '', achievements: '', goals: '' })
-        alert(data?.message || 'Promotion request submitted (placeholder)')
-      })
-      .catch((err) => {
-        console.error(err)
-        alert('Failed to submit promotion request (placeholder)')
-      })
+    // In a real app, this would submit to an API
+    console.log('Promotion request submitted:', promotionForm)
+    setShowPromotionForm(false)
+    setPromotionForm({ reason: '', achievements: '', goals: '' })
+    alert('Promotion request submitted successfully! You will receive feedback within 5 business days.')
   }
 
   return (

@@ -49,26 +49,26 @@ export default function Navigation() {
     // Role-specific items based on detailed requirements
     const roleItems: NavigationItem[] = [
       // 👨‍⚖️ Admin-only items (Administration, Payroll, Audit, Global Management)
-      { href: '/dashboard/employees', label: '👥 Employee Management', show: hasAccess(['administrator', 'super_administrator']), className: 'text-red-300 hover:text-red-200' },
-      { href: '/role-management', label: '👥 Role Management', show: hasAccess(['administrator', 'super_administrator']), className: 'text-red-300 hover:text-red-200' },
-      { href: '/payroll', label: '💰 Payroll', show: hasAccess(['administrator', 'super_administrator']), className: 'text-green-300 hover:text-green-200' },
-      { href: '/audit', label: '🔍 Audit Logs', show: hasAccess(['administrator', 'super_administrator']), className: 'text-yellow-300 hover:text-yellow-200' },
-      { href: '/policies', label: '📋 Policies', show: hasAccess(['administrator', 'super_administrator']), className: 'text-indigo-300 hover:text-indigo-200' },
+      { href: '/dashboard/employees', label: '👥 Employee Management', show: hasAccess(['admin']), className: 'text-red-300 hover:text-red-200' },
+      { href: '/role-management', label: '👥 Role Management', show: hasAccess(['admin', 'super_admin']), className: 'text-red-300 hover:text-red-200' },
+      { href: '/payroll', label: '💰 Payroll', show: hasAccess(['admin']), className: 'text-green-300 hover:text-green-200' },
+      { href: '/audit', label: '🔍 Audit Logs', show: hasAccess(['admin']), className: 'text-yellow-300 hover:text-yellow-200' },
+      { href: '/policies', label: '📋 Policies', show: hasAccess(['admin']), className: 'text-indigo-300 hover:text-indigo-200' },
       
       // 👨‍💼 Manager+ items (Managers and Admins)
-      { href: '/dashboard/project-management', label: '🚀 Project Management', show: hasAccess(['administrator', 'manager', 'super_administrator']), className: 'text-emerald-300 hover:text-emerald-200' },
-      { href: '/sprints', label: '🎯 Sprints', show: hasAccess(['administrator', 'manager', 'super_administrator']), className: 'text-purple-300 hover:text-purple-200' },
-      { href: '/leave', label: '🏖️ Leave Management', show: hasAccess(['administrator', 'manager', 'super_administrator']), className: 'text-blue-300 hover:text-blue-200' },
-      { href: '/reports', label: '📊 Team Reports', show: hasAccess(['administrator', 'manager', 'super_administrator']), className: 'text-nextgen-lime hover:text-green-200' },
-      { href: '/team-management', label: '👨‍👩‍👧‍👦 Team Management', show: hasAccess(['administrator', 'manager', 'super_administrator']), className: 'text-cyan-300 hover:text-cyan-200' },
+      { href: '/dashboard/project-management', label: '🚀 Project Management', show: hasAccess(['admin', 'manager', 'super_admin']), className: 'text-emerald-300 hover:text-emerald-200' },
+      { href: '/sprints', label: '🎯 Sprints', show: hasAccess(['admin', 'manager', 'super_admin']), className: 'text-purple-300 hover:text-purple-200' },
+      { href: '/leave', label: '🏖️ Leave Management', show: hasAccess(['admin', 'manager', 'super_admin']), className: 'text-blue-300 hover:text-blue-200' },
+      { href: '/reports', label: '📊 Team Reports', show: hasAccess(['admin', 'manager', 'super_admin']), className: 'text-nextgen-lime hover:text-green-200' },
+      { href: '/team-management', label: '👨‍👩‍👧‍👦 Team Management', show: hasAccess(['admin', 'manager', 'super_admin']), className: 'text-cyan-300 hover:text-cyan-200' },
       
       // 👤 Employee+ items (Employees, Managers, and Admins - not Interns)
-      { href: '/dashboard/tasks', label: '📝 Tasks', show: hasAccess(['administrator', 'manager', 'employee', 'super_administrator']), className: 'text-white hover:text-nextgen-teal' },
-      { href: '/dashboard/projects', label: '📁 Projects', show: hasAccess(['administrator', 'manager', 'employee', 'super_administrator']), className: 'text-white hover:text-nextgen-teal' },
-      { href: '/calendar', label: '📅 Calendar', show: hasAccess(['administrator', 'manager', 'employee', 'super_administrator']), className: 'text-white hover:text-nextgen-teal' },
-      { href: '/dashboard/video-meetings', label: '📹 Video Meetings', show: hasAccess(['administrator', 'manager', 'employee', 'super_administrator']), className: 'text-purple-300 hover:text-purple-200' },
-      { href: '/timesheets', label: '⏰ Timesheets', show: hasAccess(['administrator', 'manager', 'employee', 'super_administrator']), className: 'text-orange-300 hover:text-orange-200' },
-      { href: '/gamification', label: '🏆 Achievements', show: hasAccess(['administrator', 'manager', 'employee', 'super_administrator']), className: 'text-yellow-300 hover:text-yellow-200' },
+      { href: '/dashboard/tasks', label: '📝 Tasks', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
+      { href: '/dashboard/projects', label: '📁 Projects', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
+      { href: '/calendar', label: '📅 Calendar', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-white hover:text-nextgen-teal' },
+      { href: '/dashboard/video-meetings', label: '📹 Video Meetings', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-purple-300 hover:text-purple-200' },
+      { href: '/timesheets', label: '⏰ Timesheets', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-orange-300 hover:text-orange-200' },
+      { href: '/gamification', label: '🏆 Achievements', show: hasAccess(['admin', 'manager', 'employee']), className: 'text-yellow-300 hover:text-yellow-200' },
       
       // 👨‍🎓 Intern-only items
       { href: '/intern-portal', label: '🎓 Intern Portal', show: hasAccess(['intern']), className: 'text-orange-300 hover:text-orange-200' },
@@ -78,7 +78,7 @@ export default function Navigation() {
       { href: '/email', label: '📧 Email', show: !!isSignedIn && mounted, className: 'text-blue-300 hover:text-blue-200' },
       { href: '/dashboard/notifications', label: '🔔 Notifications', show: !!isSignedIn && mounted, className: 'text-nextgen-teal hover:text-cyan-300' },
       { href: '/profile', label: '👤 Profile', show: !!isSignedIn && mounted, className: 'text-gray-300 hover:text-white' },
-      { href: '/(dashboard)/settings', label: '⚙️ Settings', show: !!isSignedIn && mounted, className: 'text-nextgen-light-gray hover:text-white' }
+      { href: '/settings', label: '⚙️ Settings', show: !!isSignedIn && mounted, className: 'text-nextgen-light-gray hover:text-white' }
     ];
 
     return [...baseItems, ...roleItems];

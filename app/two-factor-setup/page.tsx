@@ -21,20 +21,12 @@ export default function TwoFactorSetupPage() {
       // Generate 2FA setup using Clerk's approach
       // Note: Clerk's 2FA setup requires specific configuration in Clerk Dashboard
       
-      // For now, simulate the setup process
-      const totpSecret = 'JBSWY3DPEHPK3PXP'; // Demo secret
-      const qrCodeUrl = `otpauth://totp/Employee%20Management:${user.emailAddresses[0]?.emailAddress}?secret=${totpSecret}&issuer=Employee%20Management`;
-      
-      setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeUrl)}`);
-      setBackupCodes(['12345678', '87654321', '11111111', '22222222', '33333333']);
-      setStep('verify');
+      // For now, show a message that 2FA setup requires Clerk configuration
+      alert('2FA setup requires configuration in Clerk Dashboard. Please contact your administrator.');
+      setIsLoading(false);
     } catch (error) {
       console.error('Error setting up 2FA:', error);
-      // Fallback for demo purposes
-      setQrCode('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/Demo:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Demo');
-      setBackupCodes(['12345678', '87654321', '11111111', '22222222', '33333333']);
-      setStep('verify');
-    } finally {
+      alert('Unable to set up 2FA at this time. Please try again later.');
       setIsLoading(false);
     }
   };
@@ -44,26 +36,13 @@ export default function TwoFactorSetupPage() {
     
     setIsLoading(true);
     try {
-      // For demo purposes, accept any 6-digit code
-      // In production, this would verify against the actual TOTP secret
-      if (verificationCode.length === 6 && /^\d{6}$/.test(verificationCode)) {
-        setStep('complete');
-        
-        // Update user metadata to indicate 2FA is enabled
-        await user.update({
-          unsafeMetadata: {
-            ...user.unsafeMetadata,
-            twoFactorEnabled: true,
-            twoFactorSetupDate: new Date().toISOString()
-          }
-        });
-      } else {
-        throw new Error('Invalid verification code - must be 6 digits');
-      }
+      // 2FA verification requires proper Clerk configuration
+      // For now, show that this feature needs to be properly implemented
+      alert('2FA verification requires proper Clerk configuration. Please contact your administrator.');
+      setIsLoading(false);
     } catch (error) {
       console.error('Error verifying 2FA:', error);
-      alert('Invalid verification code. Please try again.');
-    } finally {
+      alert('Unable to verify 2FA code. Please try again later.');
       setIsLoading(false);
     }
   };

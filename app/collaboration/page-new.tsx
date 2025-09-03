@@ -64,7 +64,7 @@ export default function CollaborationPage() {
     // Get user info from localStorage
     const id = localStorage.getItem('userId') || 'user_default';
     const name = localStorage.getItem('userName') || 'Utilisateur';
-    const email = localStorage.getItem('userEmail') || 'user@example.com';
+    const email = localStorage.getItem('userEmail') || 'user@company.com';
     
     setCurrentEmployee({ id, name, email });
   }, []);

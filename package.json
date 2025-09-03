@@ -9,7 +9,19 @@
     "postinstall": "npx prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
-    "test": "jest"
+    "prisma:studio": "prisma studio",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "docker:build": "docker build -t employee-management .",
+    "docker:run": "docker run -p 3000:3000 employee-management",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "deploy:staging": "vercel --prod=false",
+    "deploy:production": "vercel --prod=true"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

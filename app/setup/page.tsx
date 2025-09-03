@@ -211,7 +211,7 @@ export default function SetupPage() {
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
               className="w-full p-2 border rounded-md text-gray-900 bg-white"
-              placeholder="votre.email@example.com"
+              placeholder="votre.email@company.com"
               disabled={!!user?.primaryEmailAddress?.emailAddress}
             />
             <p className="text-xs text-gray-500 mt-1">

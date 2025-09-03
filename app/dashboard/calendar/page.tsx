@@ -88,7 +88,7 @@ const mockEvents = [
     extendedProps: {
       type: 'client',
       location: 'Client Office',
-      attendees: ['sales@company.com', 'client@example.com'],
+      attendees: ['sales@company.com', 'john.client@demo-company.com'],
       description: 'Product demonstration and contract discussion',
       priority: 'high'
     }

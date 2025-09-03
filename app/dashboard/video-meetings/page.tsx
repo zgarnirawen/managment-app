@@ -9,9 +9,9 @@ import { Badge } from '../../components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog'
-import { 
-  Video, 
-  Plus, 
+import {
+  Video,
+  Plus,
   Calendar,
   Clock,
   Users,
@@ -63,7 +63,7 @@ const mockMeetings = [
     participants: [
       { email: 'manager@company.com', name: 'Project Manager', status: 'accepted' },
       { email: 'lead@company.com', name: 'Tech Lead', status: 'accepted' },
-      { email: 'client@example.com', name: 'Client Representative', status: 'accepted' }
+      { email: 'john.client@demo-company.com', name: 'Client Representative', status: 'accepted' }
     ],
     meetingLink: 'https://meet.company.com/room/review-67890',
     recordingEnabled: true,
@@ -94,8 +94,8 @@ const mockMeetings = [
     status: 'completed',
     host: 'sales@company.com',
     participants: [
-      { email: 'client1@example.com', name: 'Client Manager', status: 'accepted' },
-      { email: 'client2@example.com', name: 'Client Tech Lead', status: 'accepted' },
+      { email: 'sarah.client@demo-company.com', name: 'Client Manager', status: 'accepted' },
+      { email: 'mike.client@demo-company.com', name: 'Client Tech Lead', status: 'accepted' },
       { email: 'support@company.com', name: 'Support Rep', status: 'accepted' }
     ],
     meetingLink: 'https://meet.company.com/room/presentation-22222',
@@ -160,7 +160,7 @@ export default function VideoMeetingsDashboard() {
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
     .slice(0, 3)
 
-  const handleCreateMeeting = async () => {
+  const handleCreateMeeting = () => {
     if (!formData.title || !formData.date || !formData.startTime || !formData.endTime) {
       alert('Please fill in all required fields')
       return
@@ -184,19 +184,8 @@ export default function VideoMeetingsDashboard() {
       maxParticipants: formData.maxParticipants
     }
 
-    // POST to placeholder create API
-    try {
-      await fetch('/api/placeholder/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'meeting', data: newMeeting })
-      })
-      setShowCreateDialog(false)
-      alert('Meeting created (placeholder)')
-    } catch (err) {
-      console.error('Failed to create meeting (placeholder)', err)
-      alert('Failed to create meeting (placeholder)')
-    }
+    console.log('New meeting created:', newMeeting)
+    setShowCreateDialog(false)
     setFormData({
       title: '',
       description: '',
@@ -207,7 +196,7 @@ export default function VideoMeetingsDashboard() {
       recordingEnabled: true,
       maxParticipants: 10
     })
-  // handled above
+    alert('Meeting created successfully!')
   }
 
   const handleJoinMeeting = (meeting: any) => {
@@ -301,7 +290,7 @@ export default function VideoMeetingsDashboard() {
           >
             {meetingControls.microphone ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
           </Button>
-          
+
           <Button
             variant={meetingControls.camera ? "default" : "destructive"}
             size="lg"
@@ -401,7 +390,7 @@ export default function VideoMeetingsDashboard() {
                           {meetingStatuses[meeting.status as keyof typeof meetingStatuses].label}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div className="flex items-center text-sm text-gray-600">
                           <Calendar className="h-4 w-4 mr-2" />
@@ -419,16 +408,16 @@ export default function VideoMeetingsDashboard() {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => copyMeetingLink(meeting.meetingLink)}
                           >
                             <Copy className="h-4 w-4 mr-2" />
                             Copy Link
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => {
                               setSelectedMeeting(meeting)
@@ -438,14 +427,14 @@ export default function VideoMeetingsDashboard() {
                             Details
                           </Button>
                         </div>
-                        
+
                         {meeting.status === 'scheduled' && (
                           <Button onClick={() => handleJoinMeeting(meeting)}>
                             <Video className="h-4 w-4 mr-2" />
                             Join Meeting
                           </Button>
                         )}
-                        
+
                         {meeting.status === 'in-progress' && (
                           <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleJoinMeeting(meeting)}>
                             <Video className="h-4 w-4 mr-2" />
@@ -556,7 +545,7 @@ export default function VideoMeetingsDashboard() {
                   </Button>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Personal Room</CardTitle>

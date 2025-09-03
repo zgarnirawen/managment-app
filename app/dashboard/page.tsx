@@ -24,10 +24,10 @@ export default function DashboardPage() {
   };
 
   const roleRedirects = {
-    intern: '/dashboard/intern',
-    employee: '/dashboard/employee', 
-    manager: '/dashboard/manager',
-    admin: '/dashboard/admin',
+    intern: '/intern',
+    employee: '/employee', 
+    manager: '/manager',
+    admin: '/admin',
     super_admin: '/dashboard/super-admin'
   };
 

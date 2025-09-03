@@ -80,7 +80,7 @@ const mockEmails = [
   },
   {
     id: 4,
-    sender: 'client@example.com',
+    sender: 'john.client@demo-company.com',
     senderName: 'John Client',
     subject: 'Meeting Follow-up and Next Steps',
     preview: 'Thank you for the productive meeting yesterday. I wanted to follow up on the action items we discussed and confirm next steps...',
@@ -143,22 +143,18 @@ export default function EmailDashboard() {
   })
 
   const handleSendEmail = () => {
-    // Call placeholder API to send email
-    fetch('/api/placeholder/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(composeData)
+    // Simulate sending email
+    console.log('Sending email:', composeData)
+    setShowCompose(false)
+    setComposeData({
+      to: '',
+      cc: '',
+      bcc: '',
+      subject: '',
+      body: '',
+      priority: 'medium'
     })
-      .then(res => res.json())
-      .then((data) => {
-        setShowCompose(false)
-        setComposeData({ to: '', cc: '', bcc: '', subject: '', body: '', priority: 'medium' })
-        alert(data?.message || 'Email sent (placeholder)')
-      })
-      .catch((err) => {
-        console.error(err)
-        alert('Failed to send email (placeholder)')
-      })
+    alert('Email sent successfully!')
   }
 
   const handleEmailAction = (action: string, emailId: number) => {

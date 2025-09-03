@@ -35,10 +35,10 @@ export default function AuditLogsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Check if user is administrator or super administrator
+  // Check if user is admin
   const userRole = user?.unsafeMetadata?.role as string || 
                    user?.publicMetadata?.role as string;
-  const isAdmin = ['administrator', 'super_administrator'].includes(userRole?.toLowerCase() || '');
+  const isAdmin = userRole?.toLowerCase() === 'admin';
 
   useEffect(() => {
     if (isLoaded && isAdmin) {

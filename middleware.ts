@@ -1,23 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-// Simple in-memory cache for roles (production optimization)
-const roleCache = new Map<string, { role: string; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-
-// Quick performance fix: Pre-cache known user to bypass slow auth-setup
-roleCache.set('user_31rxl2mNODsaNM9z2wWgdIVvJdT', { 
-  role: 'super_administrator', 
-  timestamp: Date.now() 
-});
-console.log('✅ Pre-cached user role for instant access');
-
-// Function to cache user role (called from API endpoints)
-export function cacheUserRole(userId: string, role: string) {
-  roleCache.set(userId, { role, timestamp: Date.now() });
-}
 
 // Define protected routes that require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -35,7 +17,9 @@ const isProtectedRoute = createRouteMatcher([
   '/settings'
 ]);
 
-// Admin-only routes
+// Define detailed role-based access control based on user requirements
+
+// Admin-only routes (Administration, Payroll, Audit, Global Management)
 const isAdminOnlyRoute = createRouteMatcher([
   '/dashboard/admin(.*)',
   '/dashboard/employees',
@@ -47,18 +31,18 @@ const isAdminOnlyRoute = createRouteMatcher([
   '/employee-management(.*)'
 ]);
 
-// Manager+ routes
+// Manager+ routes (accessible to Managers and Admins)
 const isManagerPlusRoute = createRouteMatcher([
   '/dashboard/manager(.*)',
-  '/leave(.*)',
-  '/sprints(.*)',
-  '/reports(.*)',
+  '/leave(.*)', // Leave approval for managers
+  '/sprints(.*)', // Sprint management
+  '/reports(.*)', // Team-level reports
   '/team-management(.*)',
   '/team-timesheets(.*)',
   '/project-management(.*)'
 ]);
 
-// Employee+ routes
+// Employee+ routes (accessible to Employees, Managers, and Admins - not Interns)
 const isEmployeePlusRoute = createRouteMatcher([
   '/dashboard/tasks(.*)',
   '/dashboard/projects(.*)',
@@ -67,6 +51,24 @@ const isEmployeePlusRoute = createRouteMatcher([
   '/time-tracking(.*)',
   '/personal-reports(.*)',
   '/gamification(.*)'
+]);
+
+// Intern-only routes
+const isInternOnlyRoute = createRouteMatcher([
+  '/intern-portal(.*)',
+  '/mentorship(.*)',
+  '/learning(.*)'
+]);
+
+// Shared routes (available to all authenticated users)
+const isSharedRoute = createRouteMatcher([
+  '/dashboard/notifications(.*)',
+  '/settings(.*)',
+  '/profile(.*)',
+  '/dashboard/chat(.*)',
+  '/collaboration(.*)',
+  '/dashboard$', // Exact dashboard match
+  '/$' // Home page
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -86,45 +88,17 @@ export default clerkMiddleware(async (auth, req) => {
   // Handle authenticated users with role-based access control
   if (userId && sessionClaims) {
     // Get user metadata from sessionClaims
-    const unsafeMetadata = (sessionClaims as any).unsafeMetadata || {};
-    const publicMetadata = (sessionClaims as any).publicMetadata || {};
+    const userMetadata = (sessionClaims as any).metadata || {};
+    const unsafeMetadata = (sessionClaims as any).unsafeMetadata || (userMetadata as any).unsafe || {};
+    const publicMetadata = (sessionClaims as any).publicMetadata || (userMetadata as any).public || {};
     
-    // Get role from metadata
-    let userRole = unsafeMetadata?.role || publicMetadata?.role as string;
-    let roleSetupComplete = unsafeMetadata?.roleSetupComplete || publicMetadata?.roleSetupComplete as boolean;
+    // Get role from multiple possible locations
+    const userRole = unsafeMetadata?.role || 
+                     publicMetadata?.role || 
+                     (sessionClaims as any)?.role as string;
     
-    // PRODUCTION-READY: Check cache first, then quick DB lookup, then redirect to setup if needed
-    if (!userRole) {
-      // Check cache first for performance
-      const cached = roleCache.get(userId);
-      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-        userRole = cached.role;
-        roleSetupComplete = true;
-        console.log('✅ Role from cache:', userRole);
-      } else {
-        // Fast database lookup before redirecting to auth-setup
-        try {
-          const prisma = new PrismaClient();
-          const dbUser = await prisma.employee.findUnique({
-            where: { clerkUserId: userId },
-            select: { role: true }
-          });
-          await prisma.$disconnect();
-          
-          if (dbUser) {
-            userRole = dbUser.role.toLowerCase().replace(/\s+/g, '_');
-            roleSetupComplete = true;
-            // Cache it immediately
-            roleCache.set(userId, { role: userRole, timestamp: Date.now() });
-            console.log('✅ Role from database (cached):', userRole);
-          } else {
-            console.log('📋 No user in database, redirecting to auth-setup for initial setup');
-          }
-        } catch (error) {
-          console.log('📋 Database lookup failed, redirecting to auth-setup for sync');
-        }
-      }
-    }
+    const roleSetupComplete = unsafeMetadata?.roleSetupComplete || 
+                              publicMetadata?.roleSetupComplete as boolean;
 
     // Debug logging
     console.log('🔍 Middleware check:', {
@@ -133,7 +107,9 @@ export default clerkMiddleware(async (auth, req) => {
       userRole,
       roleSetupComplete,
       unsafeMetadata,
-      publicMetadata
+      publicMetadata,
+      sessionClaims: Object.keys(sessionClaims),
+      metadata: userMetadata
     });
 
     // Handle direct /dashboard access - redirect to role-specific dashboard
@@ -163,36 +139,83 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(new URL(redirectPath, req.url));
     }
 
-    // Redirect users without role setup to auth-setup page
-    if (!userRole || !roleSetupComplete) {
-      // Allow access to auth-setup page
-      if (url.pathname === '/auth-setup') {
+    // Redirect users without role setup to auth-setup page (production-ready flow)
+    // But allow API routes to function regardless of role setup status
+    if (!userRole) {
+      // Allow access to auth-setup page and API routes
+      if (url.pathname === '/auth-setup' || url.pathname.startsWith('/api/')) {
         return NextResponse.next();
       }
       
-      console.log('❌ Role setup not complete, redirecting to auth-setup');
-      return NextResponse.redirect(new URL('/auth-setup', req.url));
+      // Check if user recently completed setup (within last 5 minutes)
+      const setupTimestamp = unsafeMetadata?.setupDate || publicMetadata?.setupDate;
+      if (setupTimestamp) {
+        const setupTime = new Date(setupTimestamp);
+        const now = new Date();
+        const timeDiff = now.getTime() - setupTime.getTime();
+        const fiveMinutes = 5 * 60 * 1000;
+        
+        if (timeDiff < fiveMinutes) {
+          console.log('⏳ Recent setup detected, allowing access to dashboard');
+          return NextResponse.next();
+        }
+      }
+
+      console.log('❌ No role found, redirecting to auth-setup');
+      console.log('Redirecting from:', url.pathname, 'to: /auth-setup');
+      
+      // Force redirect with explicit URL construction
+      const redirectUrl = new URL('/auth-setup', req.url);
+      console.log('Redirect URL:', redirectUrl.toString());
+      
+      return NextResponse.redirect(redirectUrl);
     } else {
       console.log('✅ User authenticated with role:', userRole);
     }
 
-    // Role-based access control
+    // Comprehensive role-based access control
     if (userRole) {
       const role = userRole.toLowerCase();
       
       // Admin-only routes
-      if (isAdminOnlyRoute(req) && !['administrator', 'super_administrator'].includes(role)) {
+      if (isAdminOnlyRoute(req) && !['admin', 'super_admin'].includes(role)) {
         return NextResponse.redirect(new URL('/dashboard?error=unauthorized&required=admin', req.url));
       }
 
-      // Manager+ routes
-      if (isManagerPlusRoute(req) && !['administrator', 'super_administrator', 'manager'].includes(role)) {
+      // Manager+ routes (Managers and Admins only)
+      if (isManagerPlusRoute(req) && !['admin', 'super_admin', 'manager'].includes(role)) {
         return NextResponse.redirect(new URL('/dashboard?error=unauthorized&required=manager', req.url));
       }
 
-      // Employee+ routes
-      if (isEmployeePlusRoute(req) && !['administrator', 'super_administrator', 'manager', 'employee'].includes(role)) {
+      // Employee+ routes (Employees, Managers, and Admins - not Interns)
+      if (isEmployeePlusRoute(req) && !['admin', 'super_admin', 'manager', 'employee'].includes(role)) {
         return NextResponse.redirect(new URL('/intern-portal?error=unauthorized&required=employee', req.url));
+      }
+
+      // Intern-only routes
+      if (isInternOnlyRoute(req) && role !== 'intern') {
+        return NextResponse.redirect(new URL('/dashboard?error=unauthorized&required=intern', req.url));
+      }
+
+      // Special handling for interns - redirect from restricted areas to intern portal
+      if (role === 'intern') {
+        const restrictedForInterns = createRouteMatcher([
+          '/payroll(.*)',
+          '/leave(.*)', // Limited leave for interns handled in intern portal
+          '/sprints(.*)',
+          '/dashboard/admin(.*)',
+          '/dashboard/manager(.*)',
+          '/dashboard/employees',
+          '/dashboard/projects', // No full project access
+          '/timesheets(.*)', // No timesheet access for interns
+          '/time-tracking(.*)',
+          '/personal-reports(.*)',
+          '/reports(.*)'
+        ]);
+        
+        if (restrictedForInterns(req)) {
+          return NextResponse.redirect(new URL('/intern-portal', req.url));
+        }
       }
     }
   }
@@ -202,7 +225,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 };
