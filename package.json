@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && next build",
+    "build": "npm run check-empty-files && npx prisma generate && next build",
     "start": "next start",
     "postinstall": "npx prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -16,6 +16,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit",
+    "check-empty-files": "node scripts/check-empty-files.js",
     "docker:build": "docker build -t employee-management .",
     "docker:run": "docker run -p 3000:3000 employee-management",
     "docker:up": "docker-compose up -d",
