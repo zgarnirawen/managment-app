@@ -1,5 +1,4 @@
 // Jest setup file for configuring test environment
-import { jest } from '@jest/globals';
 
 // Set test environment variables
 Object.assign(process.env, {
