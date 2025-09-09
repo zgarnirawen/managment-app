@@ -89,14 +89,18 @@ export default clerkMiddleware(async (auth, req) => {
   if (userId && sessionClaims) {
     // Get user metadata from sessionClaims
     const userMetadata = (sessionClaims as any).metadata || {};
-    const unsafeMetadata = (sessionClaims as any).unsafeMetadata || (userMetadata as any).unsafe || {};
+    const unsafeMetadata = (sessionClaims as any).unsafeMetadata || 
+                      (sessionClaims as any).unsafe_metadata ||
+                      (userMetadata as any).unsafe || {};
     const publicMetadata = (sessionClaims as any).publicMetadata || (userMetadata as any).public || {};
     
     // Get role from multiple possible locations
-    const userRole = unsafeMetadata?.role || 
-                     publicMetadata?.role || 
-                     (sessionClaims as any)?.role as string;
-    
+    let userRole = unsafeMetadata?.role || 
+               publicMetadata?.role || 
+               (sessionClaims as any)?.role ||
+               userMetadata?.role ||
+               (sessionClaims as any)?.user_metadata?.role ||
+               (sessionClaims as any)?.app_metadata?.role as string;
     const roleSetupComplete = unsafeMetadata?.roleSetupComplete || 
                               publicMetadata?.roleSetupComplete as boolean;
 
@@ -158,6 +162,24 @@ export default clerkMiddleware(async (auth, req) => {
         if (timeDiff < fiveMinutes) {
           console.log('⏳ Recent setup detected, allowing access to dashboard');
           return NextResponse.next();
+        }
+      }
+
+      // Handle recent sign-ins with metadata sync delays
+      if (!userRole && url.pathname !== '/auth-setup' && !url.pathname.startsWith('/api/')) {
+        const recentSignIn = (sessionClaims as any).iat;
+        if (recentSignIn) {
+          const signInTime = new Date(recentSignIn * 1000);
+          const now = new Date();
+          const timeSinceSignIn = now.getTime() - signInTime.getTime();
+          const twoMinutes = 2 * 60 * 1000;
+          
+          if (timeSinceSignIn < twoMinutes) {
+            console.log('⏳ Recent sign-in detected, allowing temporary access');
+            const response = NextResponse.next();
+            response.headers.set('X-Refresh-Required', 'true');
+            return response;
+          }
         }
       }
 

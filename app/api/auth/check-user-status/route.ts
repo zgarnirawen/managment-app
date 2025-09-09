@@ -55,19 +55,23 @@ export async function POST(request: NextRequest) {
         clerkRole = 'employee'; // default fallback
     }
 
-    // Update Clerk metadata
+    // Added cache-busting and force refresh
     await clerk.users.updateUser(userId, {
       unsafeMetadata: {
         role: clerkRole,
         roleSetupComplete: true,
         isFirstUser: clerkRole === 'super_administrator',
         setupDate: new Date().toISOString(),
-        dbSynced: true
+        dbSynced: true,
+        lastSync: new Date().getTime(), // Force refresh timestamp
+        forceRefresh: Math.random() // Cache busting
       },
       publicMetadata: {
         role: clerkRole,
         roleSetupComplete: true,
-        isFirstUser: clerkRole === 'super_administrator'
+        isFirstUser: clerkRole === 'super_administrator',
+        lastSync: new Date().getTime(),
+        forceRefresh: Math.random()
       }
     });
 

@@ -34,27 +34,33 @@ export default function AuthSetup() {
 
   const forceMetadataSync = async () => {
     try {
-      console.log('🔄 Forcing metadata sync...');
       const response = await fetch('/api/auth/check-user-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Metadata sync response:', data);
-        
-        // Wait a moment for Clerk to process the update
-        setTimeout(() => {
-          // Refresh the user session
-          if (user?.reload) {
-            user.reload();
-          }
-        }, 200); // Reduced from 500ms to 200ms
+
+        // Immediately try to refresh the user session
+        if (user?.reload) {
+          await user.reload();
+        }
+
+        // Also refresh the session token
+        await getToken({ template: 'clerk-default' });
+
+        // Check if metadata is now available
+        const updatedRole = user?.unsafeMetadata?.role || user?.publicMetadata?.role;
+        if (updatedRole) {
+          window.location.href = '/dashboard';
+          return true;
+        }
       }
     } catch (error) {
       console.error('❌ Metadata sync failed:', error);
     }
+    return false;
   };
 
   const checkSetupStatus = async () => {
