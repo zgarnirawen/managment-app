@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "npm install --production=false",
   "env": {
     "PRISMA_GENERATE_DATAPROXY": "true"
   },
@@ -15,5 +15,6 @@
     }
   },
   "regions": ["iad1"],
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "outputDirectory": ".next"
 }

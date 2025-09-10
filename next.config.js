@@ -15,9 +15,7 @@ const nextConfig = {
   // Output tracing configuration for Vercel
   outputFileTracingRoot: __dirname,
   // Exclude problematic client reference manifest files
-  outputFileTracingExcludes: {
-    '**/*_client-reference-manifest.js': true,
-  },
+  outputFileTracingExcludes: ['**/*_client-reference-manifest.js'],
   // Disable static optimization for problematic pages
   trailingSlash: false,
   // Server external packages configuration
@@ -61,6 +59,15 @@ const nextConfig = {
     config.externals.push({
       '**/client-reference-manifest.js': 'commonjs {}',
     });
+
+    // Add plugin to handle missing client reference manifest files
+    const webpack = require('webpack');
+    config.plugins = config.plugins || [];
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        __CLIENT_REFERENCE_MANIFEST__: JSON.stringify({}),
+      })
+    );
 
     return config;
   },

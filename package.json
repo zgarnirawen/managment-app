@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run check-empty-files && npx prisma generate && next build",
+    "build": "npm run check-empty-files && npx prisma generate && next build && node scripts/post-build.js",
     "start": "next start",
     "postinstall": "npx prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -105,5 +105,10 @@
     "ts-jest": "^29.4.1",
     "tsx": "^4.20.5",
     "typescript": "5.9.2"
+  },
+  "overrides": {
+    "rimraf": "^5.0.0",
+    "glob": "^10.0.0",
+    "lodash.isequal": "^4.5.0"
   }
 }
