@@ -2,7 +2,6 @@
 const nextConfig = {
   experimental: {
     optimizePackageImports: ['@clerk/nextjs', '@tanstack/react-query'],
-    clientReferenceManifest: true,
   },
   images: {
     domains: ['images.clerk.dev', 'res.cloudinary.com'],
