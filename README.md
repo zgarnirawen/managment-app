@@ -1,5 +1,6 @@
 # Employee & Time Management System
 
+<!-- Latest deployment: Fixed Jest globals error in build process -->
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/zgarnirawen/managment-app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black)](https://nextjs.org/)
@@ -1102,5 +1103,6 @@ The Employee & Time Management System represents a comprehensive solution for mo
 
 *This report provides a comprehensive overview of the Employee & Time Management System, covering all major features, technical architecture, and implementation details as documented in the project README.*</content>
 <parameter name="filePath">c:\Users\ZGARNI\t_e_manag\README.md
-#   B u i l d   f i x   a p p l i e d  
+#   B u i l d   f i x   a p p l i e d 
+ 
  
