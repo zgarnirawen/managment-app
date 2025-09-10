@@ -12,10 +12,14 @@ const nextConfig = {
   },
   // Ensure clean builds
   distDir: '.next',
+  // Output tracing configuration for Vercel
+  outputFileTracingRoot: undefined,
   // Experimental features for Next.js 15 compatibility
   experimental: {
     // Optimize for Vercel deployment
     optimizePackageImports: ['@clerk/nextjs', '@prisma/client'],
+    // Disable client references to prevent manifest issues
+    clientReferences: false,
   },
   // Webpack configuration for better compatibility
   webpack: (config, { isServer }) => {
