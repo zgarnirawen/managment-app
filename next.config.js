@@ -15,6 +15,12 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Fix client reference manifest issue
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
+  // Ensure clean builds
+  distDir: '.next',
 }
 
 module.exports = nextConfig
