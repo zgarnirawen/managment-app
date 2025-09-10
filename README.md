@@ -1,6 +1,6 @@
 # Employee & Time Management System
 
-<!-- Latest deployment: Fixed Jest globals error in build process -->
+<!-- Latest deployment: Fixed Jest globals error in build process - v2 -->
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/zgarnirawen/managment-app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5.0-black)](https://nextjs.org/)
