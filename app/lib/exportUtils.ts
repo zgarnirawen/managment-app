@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 // PDF Export functionality
 export const exportToPDF = (data: any, title: string, type: 'report' | 'payslip' | 'analytics') => {
@@ -31,18 +31,48 @@ export const exportToPDF = (data: any, title: string, type: 'report' | 'payslip'
 };
 
 // Excel Export functionality
-export const exportToExcel = (data: any[], title: string, columns: string[]) => {
+export const exportToExcel = async (data: any[], title: string, columns: string[]) => {
   // Create a new workbook
-  const wb = XLSX.utils.book_new();
-  
-  // Convert data to worksheet format
-  const ws = XLSX.utils.json_to_sheet(data);
-  
-  // Add the worksheet to the workbook
-  XLSX.utils.book_append_sheet(wb, ws, title);
-  
+  const workbook = new ExcelJS.Workbook();
+
+  // Add a worksheet
+  const worksheet = workbook.addWorksheet(title);
+
+  // Add headers if columns are provided
+  if (columns && columns.length > 0) {
+    worksheet.addRow(columns);
+    // Style the header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE6E6FA' }
+    };
+  }
+
+  // Add data rows
+  data.forEach(row => {
+    worksheet.addRow(Object.values(row));
+  });
+
+  // Auto-fit columns
+  worksheet.columns.forEach(column => {
+    column.width = 15;
+  });
+
   // Save the Excel file
-  XLSX.writeFile(wb, `${title.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`);
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+  // Create download link
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${title.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 };
 
 // Report PDF export helper

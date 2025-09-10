@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,36 +60,37 @@ export async function POST(request: NextRequest) {
     }
 
     if (format === 'excel') {
-      // Create Excel workbook
-      const wb = XLSX.utils.book_new();
-      
-      // Create worksheet from data
-      const ws = XLSX.utils.json_to_sheet(reportData.data);
-      
-      // Add some styling (basic)
-      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-      
-      // Auto-width columns
-      const colWidths: any[] = [];
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        let maxWidth = 10;
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-          const cell = ws[cellAddress];
-          if (cell && cell.v) {
-            maxWidth = Math.max(maxWidth, cell.v.toString().length);
-          }
-        }
-        colWidths.push({ width: Math.min(maxWidth + 2, 50) });
+      // Create Excel workbook using ExcelJS
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(reportData.title);
+
+      // Add headers if data exists
+      if (reportData.data && reportData.data.length > 0) {
+        const headers = Object.keys(reportData.data[0]);
+        worksheet.addRow(headers);
+
+        // Style the header row
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE6E6FA' }
+        };
+
+        // Add data rows
+        reportData.data.forEach((item: any) => {
+          worksheet.addRow(Object.values(item));
+        });
+
+        // Auto-fit columns
+        worksheet.columns.forEach(column => {
+          column.width = 15;
+        });
       }
-      ws['!cols'] = colWidths;
-      
-      // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, reportData.title);
-      
+
       // Generate buffer
-      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-      
+      const buffer = await workbook.xlsx.writeBuffer();
+
       return new NextResponse(buffer, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -20,7 +20,7 @@ import {
   Search
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-// import * as XLSX from 'xlsx';
+// import ExcelJS from 'exceljs'; // Dynamic import used instead
 // import jsPDF from 'jspdf';
 
 interface Employee {
@@ -340,28 +340,71 @@ const PayrollSystem: React.FC<PayrollSystemProps> = ({ userRole, userId, userNam
     setIsPayrollModalOpen(false);
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     try {
-      // Use real XLSX export
-      import('xlsx').then((XLSX) => {
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(payrollEntries.map(entry => ({
-          'Employee Name': entry.employeeName,
-          'Employee ID': entry.employeeId,
-          'Base Pay': entry.earnings.basePay,
-          'Overtime Pay': entry.earnings.overtimePay,
-          'Bonuses': entry.earnings.bonuses,
-          'Total Earnings': entry.earnings.total,
-          'Total Deductions': entry.deductions.total,
-          'Net Pay': entry.netPay,
-          'Pay Period Start': entry.payPeriod.startDate,
-          'Pay Period End': entry.payPeriod.endDate,
-          'Status': entry.status
-        })));
-        
-        XLSX.utils.book_append_sheet(wb, ws, 'Payroll Report');
-        XLSX.writeFile(wb, `payroll-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      // Use ExcelJS for secure Excel export
+      const ExcelJS = await import('exceljs');
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Payroll Report');
+
+      // Add headers
+      worksheet.addRow([
+        'Employee Name',
+        'Employee ID',
+        'Base Pay',
+        'Overtime Pay',
+        'Bonuses',
+        'Total Earnings',
+        'Total Deductions',
+        'Net Pay',
+        'Pay Period Start',
+        'Pay Period End',
+        'Status'
+      ]);
+
+      // Style the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE6E6FA' }
+      };
+
+      // Add data rows
+      payrollEntries.forEach(entry => {
+        worksheet.addRow([
+          entry.employeeName,
+          entry.employeeId,
+          entry.earnings.basePay,
+          entry.earnings.overtimePay,
+          entry.earnings.bonuses,
+          entry.earnings.total,
+          entry.deductions.total,
+          entry.netPay,
+          entry.payPeriod.startDate,
+          entry.payPeriod.endDate,
+          entry.status
+        ]);
       });
+
+      // Auto-fit columns
+      worksheet.columns.forEach(column => {
+        column.width = 15;
+      });
+
+      // Save the Excel file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `payroll-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error exporting to Excel:', error);
     }
