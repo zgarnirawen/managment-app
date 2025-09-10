@@ -15,8 +15,6 @@ const nextConfig = {
   },
   // Ensure clean builds
   distDir: '.next',
-  // Fast build
-  swcMinify: true,
 }
 
 module.exports = nextConfig
