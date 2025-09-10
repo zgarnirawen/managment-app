@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '../../lib/prisma';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { nanoid } from 'nanoid';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const ALLOWED_FILE_TYPES = [
   'image/jpeg',
@@ -139,28 +145,37 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    try {
-      await mkdir(uploadsDir, { recursive: true });
-    } catch (error) {
-      // Directory might already exist
-    }
-
     // Generate unique filename
     const fileExtension = file.name.split('.').pop();
     const uniqueFilename = `${nanoid()}.${fileExtension}`;
-    const filePath = join(uploadsDir, uniqueFilename);
 
-    // Save file to disk
+    // Upload file to Cloudinary
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
+
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'employee-management/attachments',
+          public_id: uniqueFilename,
+          resource_type: 'auto',
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+      uploadStream.end(buffer);
+    });
 
     // Save file info to database
     const attachmentData: any = {
       fileName: file.name,
-      fileUrl: `/uploads/${uniqueFilename}`,
+      fileUrl: (uploadResult as any).secure_url,
       fileSize: file.size,
       fileType: file.type,
       uploadedBy: employee.id
