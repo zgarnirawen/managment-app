@@ -1,9 +1,7 @@
 // Quick production optimization
 const nextConfig = {
   experimental: {
-    optimizePackageImports: ['@clerk/nextjs', '@tanstack/react-query'],
-    // Explicitly disable any client reference manifest features
-    clientReferenceManifest: false,
+    optimizePackageImports: ['@clerk/nextjs', '@tanstack/react-query']
   },
   images: {
     domains: ['images.clerk.dev', 'res.cloudinary.com'],
@@ -17,27 +15,8 @@ const nextConfig = {
   },
   // Ensure clean builds
   distDir: '.next',
-  // Additional build configuration to prevent clientReferenceManifest issues
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Ensure clientReferenceManifest is not generated
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          cacheGroups: {
-            ...config.optimization.splitChunks?.cacheGroups,
-            framework: {
-              chunks: 'all',
-              name: 'framework',
-              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
-              priority: 40,
-              enforce: true,
-            },
-          },
-        },
-      };
-    }
-    return config;
-  },
+  // Fast build
+  swcMinify: true,
 }
+
+module.exports = nextConfig
