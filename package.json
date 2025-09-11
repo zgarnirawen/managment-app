@@ -1,6 +1,7 @@
 {
   "name": "employee-time-management",
   "version": "1.0.0",
+  "description": "Employee Time Management System - Updated for Vercel deployment fix",
   "private": true,
   "scripts": {
     "dev": "next dev",
