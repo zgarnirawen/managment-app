@@ -14,40 +14,51 @@ function handleClientReferenceManifests(dir) {
       return;
     }
 
-    const files = fs.readdirSync(dir);
+    let files;
+    try {
+      files = fs.readdirSync(dir);
+    } catch (readError) {
+      console.log(`⚠️  Error reading directory ${dir}:`, readError.message);
+      return;
+    }
 
     for (const file of files) {
       const filePath = path.join(dir, file);
 
-      // Check if file exists before trying to stat it
-      if (!fs.existsSync(filePath)) {
-        console.log(`⚠️  File not found: ${filePath}`);
-        continue;
-      }
+      try {
+        // Check if file exists before trying to stat it
+        if (!fs.existsSync(filePath)) {
+          console.log(`⚠️  File not found: ${filePath}`);
+          continue;
+        }
 
-      const stat = fs.statSync(filePath);
+        const stat = fs.statSync(filePath);
 
-      if (stat.isDirectory()) {
-        handleClientReferenceManifests(filePath);
-      } else if (file.includes('_client-reference-manifest.js')) {
-        console.log(`📄 Found client reference manifest: ${filePath}`);
-        // Ensure the file exists and is readable
-        try {
-          const content = fs.readFileSync(filePath, 'utf8');
-          if (!content || content.trim() === '') {
-            console.log(`⚠️  Empty client reference manifest found: ${filePath}`);
-            // Create a minimal manifest if empty
-            fs.writeFileSync(filePath, 'export default {};');
-          }
-        } catch (error) {
-          console.log(`⚠️  Error reading client reference manifest: ${filePath}`, error.message);
-          // Create a minimal manifest if unreadable
+        if (stat.isDirectory()) {
+          handleClientReferenceManifests(filePath);
+        } else if (file.includes('_client-reference-manifest.js')) {
+          console.log(`📄 Found client reference manifest: ${filePath}`);
+          // Ensure the file exists and is readable
           try {
-            fs.writeFileSync(filePath, 'export default {};');
-          } catch (writeError) {
-            console.log(`⚠️  Error writing to manifest file: ${filePath}`, writeError.message);
+            const content = fs.readFileSync(filePath, 'utf8');
+            if (!content || content.trim() === '') {
+              console.log(`⚠️  Empty client reference manifest found: ${filePath}`);
+              // Create a minimal manifest if empty
+              fs.writeFileSync(filePath, 'export default {};');
+            }
+          } catch (error) {
+            console.log(`⚠️  Error reading client reference manifest: ${filePath}`, error.message);
+            // Create a minimal manifest if unreadable
+            try {
+              fs.writeFileSync(filePath, 'export default {};');
+            } catch (writeError) {
+              console.log(`⚠️  Error writing to manifest file: ${filePath}`, writeError.message);
+            }
           }
         }
+      } catch (fileError) {
+        console.log(`⚠️  Error processing file ${filePath}:`, fileError.message);
+        // Continue processing other files
       }
     }
   } catch (error) {
@@ -59,7 +70,11 @@ function handleClientReferenceManifests(dir) {
 const nextDir = path.join(process.cwd(), '.next');
 if (fs.existsSync(nextDir)) {
   console.log('🔍 Scanning .next directory for client reference manifests...');
-  handleClientReferenceManifests(nextDir);
+  try {
+    handleClientReferenceManifests(nextDir);
+  } catch (error) {
+    console.log(`⚠️  Error during manifest processing:`, error.message);
+  }
 } else {
   console.log('⚠️  .next directory not found');
 }
