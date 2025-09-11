@@ -8,10 +8,23 @@ console.log('🔧 Running post-build cleanup...');
 // Function to recursively find and handle client reference manifest files
 function handleClientReferenceManifests(dir) {
   try {
+    // Check if directory exists before trying to read it
+    if (!fs.existsSync(dir)) {
+      console.log(`⚠️  Directory not found: ${dir}`);
+      return;
+    }
+
     const files = fs.readdirSync(dir);
 
     for (const file of files) {
       const filePath = path.join(dir, file);
+
+      // Check if file exists before trying to stat it
+      if (!fs.existsSync(filePath)) {
+        console.log(`⚠️  File not found: ${filePath}`);
+        continue;
+      }
+
       const stat = fs.statSync(filePath);
 
       if (stat.isDirectory()) {
@@ -29,7 +42,11 @@ function handleClientReferenceManifests(dir) {
         } catch (error) {
           console.log(`⚠️  Error reading client reference manifest: ${filePath}`, error.message);
           // Create a minimal manifest if unreadable
-          fs.writeFileSync(filePath, 'export default {};');
+          try {
+            fs.writeFileSync(filePath, 'export default {};');
+          } catch (writeError) {
+            console.log(`⚠️  Error writing to manifest file: ${filePath}`, writeError.message);
+          }
         }
       }
     }

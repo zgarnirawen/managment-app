@@ -15,7 +15,9 @@ const nextConfig = {
   // Output tracing configuration for Vercel
   outputFileTracingRoot: __dirname,
   // Exclude problematic client reference manifest files
-  outputFileTracingExcludes: ['**/*_client-reference-manifest.js'],
+  outputFileTracingExcludes: {
+    '**/*_client-reference-manifest.js': true,
+  },
   // Disable static optimization for problematic pages
   trailingSlash: false,
   // Server external packages configuration
