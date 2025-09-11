@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run check-empty-files && npx prisma generate && next build && node scripts/post-build.js",
+    "build": "npm run check-empty-files && npx prisma generate && next build",
     "start": "next start",
     "postinstall": "npx prisma generate",
     "prisma:migrate": "prisma migrate dev",

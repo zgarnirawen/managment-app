@@ -22,11 +22,6 @@ const nextConfig = {
   experimental: {
     // Optimize for Vercel deployment
     optimizePackageImports: ['@clerk/nextjs', '@prisma/client'],
-    // Exclude problematic client reference manifest files
-    outputFileTracingExcludes: [
-      '**/*_client-reference-manifest.js',
-      '**/node_modules/**'
-    ],
   },
   // Webpack configuration for better compatibility
   webpack: (config, { isServer }) => {
