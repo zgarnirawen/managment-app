@@ -72,6 +72,24 @@ if (fs.existsSync(nextDir)) {
   console.log('🔍 Scanning .next directory for client reference manifests...');
   try {
     handleClientReferenceManifests(nextDir);
+
+    // Additional check: ensure the specific problematic file exists
+    const problematicFile = path.join(nextDir, 'server/app/(dashboard)/page_client-reference-manifest.js');
+    if (!fs.existsSync(problematicFile)) {
+      console.log('⚠️  Creating missing client reference manifest for (dashboard) route group...');
+      try {
+        // Ensure directory exists
+        const dir = path.dirname(problematicFile);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        // Create empty manifest file
+        fs.writeFileSync(problematicFile, 'export default {};');
+        console.log('✅ Created missing manifest file');
+      } catch (createError) {
+        console.log(`⚠️  Could not create missing manifest file: ${createError.message}`);
+      }
+    }
   } catch (error) {
     console.log(`⚠️  Error during manifest processing:`, error.message);
   }

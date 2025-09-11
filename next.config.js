@@ -14,10 +14,6 @@ const nextConfig = {
   distDir: '.next',
   // Output tracing configuration for Vercel
   outputFileTracingRoot: __dirname,
-  // Exclude problematic client reference manifest files
-  outputFileTracingExcludes: [
-    '**/*_client-reference-manifest.js'
-  ],
   // Disable static optimization for problematic pages
   trailingSlash: false,
   // Server external packages configuration
@@ -26,6 +22,11 @@ const nextConfig = {
   experimental: {
     // Optimize for Vercel deployment
     optimizePackageImports: ['@clerk/nextjs', '@prisma/client'],
+    // Exclude problematic client reference manifest files
+    outputFileTracingExcludes: [
+      '**/*_client-reference-manifest.js',
+      '**/node_modules/**'
+    ],
   },
   // Webpack configuration for better compatibility
   webpack: (config, { isServer }) => {
@@ -70,6 +71,16 @@ const nextConfig = {
         __CLIENT_REFERENCE_MANIFEST__: JSON.stringify({}),
       })
     );
+
+    // Ignore missing client reference manifest files during build
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
+      test: /_client-reference-manifest\.js$/,
+      use: {
+        loader: 'null-loader',
+      },
+    });
 
     return config;
   },
